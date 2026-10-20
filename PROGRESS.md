@@ -19,6 +19,10 @@ Plan: `~/.claude/plans/make-an-new-folder-jolly-rainbow.md`. Deadline Oct 26, 20
   rate limits, shared tag profile, console count, offline queue; Join/Listener/Console screens, dashboard page, fake listener, teardown script.
   Tests: 181 unit, 20 relay integration (`e2e:relay`), 12 two-phone browser (`e2e-multi`). NOT DEPLOYED: needs `wrangler login` + owner's OK.
 
+- Phase 6 (polish): axe-core audit across 11 screens (0 violations; all user-facing text ≥ 18px, tap targets ≥ 48px), PWA manifest +
+  icons + service worker (app reopens offline after one visit, e2e-verified), `tools/a11y.mjs`, `tools/e2e-offline.mjs`.
+  NOT verified by me (needs a real iPhone): audible siren/speech volume with the mic live, VoiceOver reading order, Wake Lock behaviour, sample rate.
+
 ## CHECKPOINT 1 (owner sends recordings later; work continues on synthetic data meanwhile)
 Record real rings on the iPhone at `?debug=1`, put WAVs in `recordings/`, run `npm run analyze -- recordings/*.wav`.
 Report: frequency, ring length, click length. Then set `clickSkipMs`, ring window bounds and thresholds in `src/dsp/params.ts`.

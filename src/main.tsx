@@ -26,3 +26,16 @@ function App() {
 }
 
 render(<App />, document.getElementById('app')!);
+
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  addEventListener('load', () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`)
+      .then(() => navigator.serviceWorker.ready)
+      .then((reg) => {
+        const urls = performance.getEntriesByType('resource').map((r) => r.name).concat(location.href.split('#')[0]!);
+        reg.active?.postMessage({ type: 'cache', urls });
+      })
+      .catch(() => undefined);
+  });
+}
