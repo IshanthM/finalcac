@@ -5,7 +5,8 @@ import { unlockOutputs } from '../alert/unlock.ts';
 import { evaluateCalibration, type CalibrationRing } from '../dsp/calibration.ts';
 import { toleranceFrac, type TagProfile } from '../dsp/profile.ts';
 import { PARAMS } from '../dsp/params.ts';
-import { getState, go, setState } from '../state.ts';
+import { pushProfile } from '../net/session.ts';
+import { getState, goBack, setState } from '../state.ts';
 import { useEngine } from './useEngine.ts';
 
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
@@ -58,6 +59,7 @@ export function Calibrate() {
     const profile: TagProfile = { ...status.profile, sampleRate: e.info.sampleRate, calibratedAt: new Date().toISOString() };
     setState({ profile });
     engine.setProfile(profile);
+    pushProfile(profile); // shared with the whole store when connected; otherwise sent on the next connect
     setSaved(true);
   };
 
@@ -110,7 +112,7 @@ export function Calibrate() {
           <div class="actions">
             {!saved
               ? <button class="btn btn-primary" onClick={save}>Save as store tag profile</button>
-              : <button class="btn btn-primary" onClick={() => go('')}>Saved. Back to home</button>}
+              : <button class="btn btn-primary" onClick={() => goBack()}>Saved. Go back</button>}
             <button class="btn" onClick={reset}>Start over</button>
           </div>
         </section>
@@ -119,7 +121,7 @@ export function Calibrate() {
       {getState().profile && status.kind !== 'ok' && (
         <p class="muted">Current profile: {hz(getState().profile!.freqHz)} Hz ±{(toleranceFrac(getState().profile!.spreadFrac) * 100).toFixed(2)}%. Finishing a new calibration replaces it.</p>
       )}
-      <div class="actions"><button class="btn" onClick={() => go('')}>Back</button>{status.kind !== 'ok' && <button class="btn" onClick={reset}>Start over</button>}</div>
+      <div class="actions"><button class="btn" onClick={() => goBack()}>Back</button>{status.kind !== 'ok' && <button class="btn" onClick={reset}>Start over</button>}</div>
     </main>
   );
 }

@@ -1,0 +1,19 @@
+name = "finalcac-relay"
+main = "worker/src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Browser origins allowed to call the relay (localhost is always allowed for development).
+ALLOWED_ORIGINS = "https://ishanthm.github.io"
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "StoreRoom"
+
+[[durable_objects.bindings]]
+name = "LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["StoreRoom", "RateLimiter"]

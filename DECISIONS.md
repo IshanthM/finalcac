@@ -20,3 +20,10 @@
   A steady tone (alarm beep) is rejected because it never ends.
 - **D11 Known limit.** A lone random tone landing inside ±0.8% of the tag frequency looks like a ring by frequency alone (~3%/tone);
   on 40 synthetic clatter seeds ≤ 3 accepted. Multi-listener agreement and real recordings are the further defence.
+- **D12 Listener alert policy.** When staff are reachable the listener stays quiet (a siren in a fitting room tips off the thief) and notes
+  "Staff alerted". With no connection, or no console online, it alarms locally (screen + siren + speech) and queues the report.
+  Flip by changing `reachable` in `src/ui/Listener.tsx`.
+- **D13 Late reports never move an alert.** The Deduper collects 300 ms, attributes to the highest SNR, and later reports inside 1 s only
+  extend "also heard by" (an update), so staff are not told one zone and then another.
+- **D14 One dedupe for both paths.** `src/dsp/dedupe.ts` runs in the demo hub and in the Durable Object, so demo and cloud behave the same.
+- **D15 Relay URL** is build-time `VITE_RELAY_URL` or a remembered `?relay=` query; default is localhost for development.

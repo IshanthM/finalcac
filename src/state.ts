@@ -76,3 +76,9 @@ export function useRoute(): string {
 export function go(route: string): void {
   location.hash = `#/${route}`;
 }
+
+/** Back one step, or home if this page was opened directly. */
+export function goBack(): void {
+  if (history.length > 1) history.back();
+  else go('');
+}

@@ -15,9 +15,13 @@ Plan: `~/.claude/plans/make-an-new-folder-jolly-rainbow.md`. Deadline Oct 26, 20
   event log, listener hero, zone form, local hub, Demo screen with "Test alarm" / "heard by two zones". Browser e2e (`tools/e2e-demo.mjs`) passes:
   real ring → alert + speech + ack + log; register → quiet Checkout; dedupe attribution.
 
+- Phase 4 (relay) + Phase 5 (dedupe, register rule), both built and tested locally: Cloudflare Worker + StoreRoom Durable Object,
+  rate limits, shared tag profile, console count, offline queue; Join/Listener/Console screens, dashboard page, fake listener, teardown script.
+  Tests: 181 unit, 20 relay integration (`e2e:relay`), 12 two-phone browser (`e2e-multi`). NOT DEPLOYED: needs `wrangler login` + owner's OK.
+
 ## CHECKPOINT 1 (owner sends recordings later; work continues on synthetic data meanwhile)
 Record real rings on the iPhone at `?debug=1`, put WAVs in `recordings/`, run `npm run analyze -- recordings/*.wav`.
 Report: frequency, ring length, click length. Then set `clickSkipMs`, ring window bounds and thresholds in `src/dsp/params.ts`.
 
 ## Next
-Phase 3 demo mode → Phase 4 relay → Phase 5 dedupe/register rules → Phase 6 polish. Retune `src/dsp/params.ts` when recordings arrive.
+Ask before `npm run relay:deploy` (free). Phase 6 polish (ARIA audit, PWA/offline shell, text sizes). Phase 7 field test with real tags. Retune `src/dsp/params.ts` when recordings arrive.

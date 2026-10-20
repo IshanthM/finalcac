@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["@cloudflare/workers-types"],
+    "jsx": "preserve"
+  },
+  "include": ["src", "../src/dsp/dedupe.ts", "../src/dsp/profile.ts", "../src/dsp/params.ts"]
+}

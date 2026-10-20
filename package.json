@@ -8,21 +8,29 @@
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p worker",
     "test": "vitest run",
     "deploy": "bash scripts/deploy-pages.sh",
     "fixtures": "node --experimental-strip-types tools/make-fixtures.ts single && node --experimental-strip-types tools/make-fixtures.ts calib && node --experimental-strip-types tools/make-fixtures.ts calib-outlier",
-    "analyze": "node --experimental-strip-types tools/analyze-wav.ts"
+    "analyze": "node --experimental-strip-types tools/analyze-wav.ts",
+    "relay:dev": "wrangler dev --local --port 8787 --persist-to .scratch/wrangler --var CREATE_LIMIT:100000",
+    "relay:deploy": "wrangler deploy",
+    "relay:teardown": "bash scripts/teardown.sh",
+    "relay:typecheck": "tsc --noEmit -p worker",
+    "e2e:relay": "node tools/e2e-relay.mjs",
+    "fake-listener": "node --experimental-strip-types tools/fake-listener.ts"
   },
   "dependencies": {
     "preact": "^10.26.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261019.1",
     "@preact/preset-vite": "^2.10.0",
     "@types/node": "^22.20.4",
     "playwright-core": "^1.63.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wrangler": "^4.151.3"
   }
 }
