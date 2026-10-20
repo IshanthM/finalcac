@@ -47,3 +47,41 @@ export function ringSignal(spec: RingSpec = {}): { x: Float32Array; onset: numbe
   }
   return { x, onset, sampleRate: sr };
 }
+
+/** A fully specified tone burst added to `x` in place (exponential decay). */
+export function addTone(x: Float32Array, sr: number, startMs: number, freqHz: number, amp: number, tauMs: number, phase = 0): void {
+  const s0 = Math.round((startMs / 1000) * sr);
+  const tau = (tauMs / 1000) * sr;
+  for (let i = 0; s0 + i < x.length; i++) {
+    const env = Math.exp(-i / tau);
+    if (env < 1e-5) break;
+    x[s0 + i]! += amp * env * Math.sin((2 * Math.PI * freqHz * i) / sr + phase);
+  }
+}
+
+/** Broadband click: Gaussian noise with a fast exponential envelope. */
+export function addClick(x: Float32Array, sr: number, startMs: number, amp: number, lenMs: number, seed: number): void {
+  const g = createGaussian(createRandom(seed));
+  const s0 = Math.round((startMs / 1000) * sr);
+  const n = Math.round((lenMs / 1000) * sr);
+  for (let i = 0; i < n && s0 + i < x.length; i++) x[s0 + i]! += amp * g() * Math.exp(-i / (n / 3));
+}
+
+/** Noise level (rms, full band at `sr`) that puts a tone of amplitude `amp` at `snrDb` over the ±1% band around `f`. */
+export function noiseRmsForSnr(amp: number, f: number, snrDb: number, sr = 48000): number {
+  const bw = 2 * 0.01 * f;
+  const noisePower = (amp * amp) / 2 / 10 ** (snrDb / 10);
+  return Math.sqrt((noisePower * (sr / 2)) / bw);
+}
+
+/** White-noise burst of `lenMs` at `amp` rms added to `x`. */
+export function addNoiseBurst(x: Float32Array, sr: number, startMs: number, lenMs: number, rms: number, seed: number): void {
+  const g = createGaussian(createRandom(seed));
+  const s0 = Math.round((startMs / 1000) * sr);
+  const n = Math.round((lenMs / 1000) * sr);
+  for (let i = 0; i < n && s0 + i < x.length; i++) x[s0 + i]! += rms * g();
+}
+
+export function uniform(seed: number): () => number {
+  return createRandom(seed);
+}

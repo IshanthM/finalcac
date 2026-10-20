@@ -1,7 +1,11 @@
 /** Microphone capture: getUserMedia (all processing off) → AudioWorklet → 2 s ring buffer → onset + analysis. */
 import { RingBuffer } from '../dsp/ringBuffer.ts';
 import { OnsetDetector, type Onset } from '../dsp/onset.ts';
-import { analyzeEvent, type EventAnalysis } from '../dsp/eventAnalysis.ts';
+import type { EventAnalysis } from '../dsp/eventAnalysis.ts';
+import type { Verdict } from '../dsp/detector.ts';
+import { evaluateOnset } from '../dsp/pipeline.ts';
+import type { TagProfile } from '../dsp/profile.ts';
+import { PARAMS } from '../dsp/params.ts';
 import workletUrl from './capture-worklet.js?worker&url';
 
 export type EngineState = 'idle' | 'starting' | 'running' | 'suspended' | 'error';
@@ -12,6 +16,9 @@ export interface CapturedEvent {
   at: number;
   onset: Onset;
   analysis: EventAnalysis;
+  verdict: Verdict;
+  /** True if this event was judged while calibrating (frequency match skipped). */
+  calibrating: boolean;
 }
 
 export interface Snapshot {
@@ -33,10 +40,12 @@ export interface EngineInfo {
 }
 
 const PRE_S = 0.5;
-const ANALYSE_AFTER_S = 0.3;
+const ANALYSE_AFTER_S = PARAMS.analyzeAfterMs / 1000;
 const SNAPSHOT_AFTER_S = 1.0;
 
 type Listener = () => void;
+export type EngineMode = 'detect' | 'calibrate';
+export type EventListener = (ev: CapturedEvent) => void;
 
 export class CaptureEngine {
   ring: RingBuffer | null = null;
@@ -54,7 +63,11 @@ export class CaptureEngine {
   private ctx: AudioContext | null = null;
   private stream: MediaStream | null = null;
   private node: AudioWorkletNode | null = null;
+  /** Tag profile used by the tolerance gate; null = not calibrated (nothing is accepted in 'detect' mode). */
+  profile: TagProfile | null = null;
+  mode: EngineMode = 'detect';
   private listeners = new Set<Listener>();
+  private eventListeners = new Set<EventListener>();
   private pending: { onset: Onset; at: number; analysed: boolean; saved: boolean }[] = [];
   private recording: { chunks: Float32Array[]; remaining: number; resolve: (s: Float32Array) => void } | null = null;
   private nextId = 1;
@@ -62,6 +75,19 @@ export class CaptureEngine {
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
     return () => this.listeners.delete(fn);
+  }
+  /** Called once per evaluated event (accepted or not), after the gates ran. */
+  onEvent(fn: EventListener): () => void {
+    this.eventListeners.add(fn);
+    return () => this.eventListeners.delete(fn);
+  }
+  setProfile(p: TagProfile | null): void {
+    this.profile = p;
+    this.emit();
+  }
+  setMode(m: EngineMode): void {
+    this.mode = m;
+    this.emit();
   }
   private emit(): void {
     for (const fn of this.listeners) fn();
@@ -171,10 +197,18 @@ export class CaptureEngine {
     for (const p of this.pending) {
       const start = p.onset.frameStart - Math.round(PRE_S * sr);
       if (!p.analysed && ring.writeIndex >= p.onset.frameStart + Math.round(ANALYSE_AFTER_S * sr)) {
-        const seg = new Float32Array(ring.writeIndex - start);
-        if (ring.readRange(start, seg.length, seg) === 'ok') {
-          const analysis = analyzeEvent(seg, sr, p.onset.frameStart - start);
-          this.events = [{ id: this.nextId++, at: p.at, onset: p.onset, analysis }, ...this.events].slice(0, 30);
+        const post = Math.round(ANALYSE_AFTER_S * sr);
+        const seg = new Float32Array(Math.round(PRE_S * sr) + post);
+        const segStart = p.onset.frameStart - Math.round(PRE_S * sr);
+        if (ring.readRange(segStart, seg.length, seg) === 'ok') {
+          const calibrating = this.mode === 'calibrate';
+          const rel = { ...p.onset, frameStart: Math.round(PRE_S * sr), frameEnd: Math.round(PRE_S * sr) + this.detector!.frameSize };
+          const ev0 = evaluateOnset(seg, sr, rel, this.profile, { skipTolerance: calibrating, preMs: PRE_S * 1000 });
+          if (ev0) {
+            const ev: CapturedEvent = { id: this.nextId++, at: p.at, onset: p.onset, analysis: ev0.analysis, verdict: ev0.verdict, calibrating };
+            this.events = [ev, ...this.events].slice(0, 30);
+            for (const fn of this.eventListeners) fn(ev);
+          }
         }
         p.analysed = true;
       }

@@ -29,12 +29,21 @@ function EventCard({ ev }: { ev: CapturedEvent }) {
   return (
     <li class="card">
       <div class="card-head">{new Date(ev.at).toLocaleTimeString()} · {p ? `${f1(p.freqHz, 0)} Hz` : 'no peak'}</div>
+      <p class={ev.verdict.accepted ? 'verdict ok' : 'verdict no'}>
+        {ev.verdict.accepted ? 'ACCEPTED as tag' : `Rejected: ${ev.verdict.failed.join(', ')}`}
+      </p>
+      <ul class="gates">
+        {(['snr', 'guard', 'decay', 'tolerance'] as const).map((g) => (
+          <li key={g} class={ev.verdict.gates[g].pass ? 'pass' : 'fail'}>{ev.verdict.gates[g].pass ? '✓' : '✗'} {ev.verdict.gates[g].text}</li>
+        ))}
+      </ul>
       <dl class="kv">
         <dt>SNR</dt><dd>{f1(a.snrDb)} dB</dd>
         <dt>Guard margin</dt><dd>{p ? f1(p.guardMarginDb) : '—'} dB</dd>
         <dt>Click</dt><dd>{f1(a.clickMs)} ms</dd>
         <dt>Ring length</dt><dd>{f1(a.ringMs)} ms</dd>
         <dt>Decay τ</dt><dd>{f1(a.tauMs)} ms (−20 dB in {f1(a.decay20Ms)} ms, R² {f1(a.decayR2, 2)})</dd>
+        <dt>Window used</dt><dd>{f1(a.windowMs)} ms after click skip</dd>
         <dt>Band at onset</dt><dd>{db(ev.onset.bandDb)} vs floor {db(ev.onset.floorDb)}</dd>
       </dl>
     </li>

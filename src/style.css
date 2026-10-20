@@ -33,3 +33,14 @@ h3 small { color: var(--muted); font-weight: 400; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
 .card-head { font-weight: 700; color: var(--yellow); }
 .pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; font-size: 14px; }
+.rings { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 8px; }
+.ring { display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 8px 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--panel); }
+.ring.current { border-color: var(--yellow); }
+.ring.done { border-color: var(--text); }
+.ring-n { font-weight: 700; } .ring-v { font-variant-numeric: tabular-nums; color: var(--muted); }
+.ring.done .ring-v { color: var(--text); }
+.note { min-height: 3em; font-size: 20px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px 16px; margin: 16px 0; }
+.warn { color: var(--yellow); }
+.verdict { font-weight: 700; margin: 4px 0; } .verdict.ok { color: var(--yellow); } .verdict.no { color: var(--muted); }
+.gates { list-style: none; padding: 0; margin: 4px 0 8px; font-size: 16px; } .gates .pass { color: var(--text); } .gates .fail { color: var(--muted); }

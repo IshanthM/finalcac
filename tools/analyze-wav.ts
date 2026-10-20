@@ -1,44 +1,47 @@
-// Usage: npm run analyze -- recordings/*.wav [--json]
-// For every onset in each WAV, prints the measurements Checkpoint 1 needs:
-// ring frequency, SNR, guard margin, click length, ring length, decay.
+// Usage: npm run analyze -- recordings/*.wav [--json] [--profile 13300[,spread]] [--calibrating]
+// For every onset in each WAV, prints the measurements Checkpoint 1 needs (ring frequency, SNR, guard margin,
+// click length, ring length, decay) and what the detector would decide, with the reason for any rejection.
 import { readFileSync } from 'node:fs';
 import { decodeWav } from '../src/dsp/wav.ts';
-import { OnsetDetector } from '../src/dsp/onset.ts';
-import { analyzeEvent } from '../src/dsp/eventAnalysis.ts';
+import { scanSignal } from '../src/dsp/pipeline.ts';
+import type { TagProfile } from '../src/dsp/profile.ts';
 
 const args = process.argv.slice(2);
 const json = args.includes('--json');
-const files = args.filter((a) => !a.startsWith('--'));
+const calibrating = args.includes('--calibrating');
+const pi = args.indexOf('--profile');
+const files = args.filter((a, i) => !a.startsWith('--') && (pi < 0 || i !== pi + 1));
 if (files.length === 0) {
-  console.error('usage: npm run analyze -- file.wav [more.wav] [--json]');
+  console.error('usage: npm run analyze -- file.wav [more.wav] [--json] [--profile FREQ[,SPREAD]] [--calibrating]');
   process.exit(1);
 }
+const [pf, ps] = pi >= 0 ? (args[pi + 1] ?? '').split(',').map(Number) : [];
 const f = (v: number, d = 1): string => (Number.isFinite(v) ? v.toFixed(d) : String(v));
 const rows: Record<string, unknown>[] = [];
 
 for (const file of files) {
   const wav = decodeWav(new Uint8Array(readFileSync(file)));
   const sr = wav.sampleRate;
-  const x = wav.samples;
-  const det = new OnsetDetector(sr);
-  const onsets = [];
-  for (let i = 0; i < x.length; i += 128) onsets.push(...det.process(x.subarray(i, i + 128)));
-  if (!json) console.log(`\n${file}: ${(x.length / sr).toFixed(2)} s @ ${sr} Hz, ${onsets.length} onset(s)`);
+  const profile: TagProfile | null = pf
+    ? { freqHz: pf, spreadFrac: ps ?? 0.002, decayMs: 0, sampleRate: sr, calibratedAt: '', rings: [] }
+    : null;
+  const evals = scanSignal(wav.samples, sr, profile, { skipTolerance: calibrating || profile === null });
+  if (!json) console.log(`\n${file}: ${(wav.samples.length / sr).toFixed(2)} s @ ${sr} Hz, ${evals.length} onset(s)`);
   let n = 0;
-  for (const o of onsets) {
-    const start = Math.max(0, o.frameStart - Math.round(0.3 * sr));
-    const end = Math.min(x.length, o.frameStart + Math.round(0.5 * sr));
-    const a = analyzeEvent(x.subarray(start, end), sr, o.frameStart - start);
+  for (const ev of evals) {
+    const a = ev.analysis;
     const row = {
-      file, n: ++n, atS: +(o.frameStart / sr).toFixed(3), peakHz: a.peak ? +a.peak.freqHz.toFixed(1) : null,
+      file, n: ++n, atS: +(ev.onset.frameStart / sr).toFixed(3), peakHz: a.peak ? +a.peak.freqHz.toFixed(1) : null,
       snrDb: +f(a.snrDb), guardDb: a.peak ? +f(a.peak.guardMarginDb) : null,
-      clickMs: +f(a.clickMs), ringMs: +f(a.ringMs), tauMs: +f(a.tauMs), decay20Ms: +f(a.decay20Ms), r2: +f(a.decayR2, 2),
+      clickMs: +f(a.clickMs), ringMs: +f(a.ringMs), windowMs: +f(a.windowMs), tauMs: +f(a.tauMs), decay20Ms: +f(a.decay20Ms), r2: +f(a.decayR2, 2),
+      accepted: ev.verdict.accepted, failed: ev.verdict.failed,
     };
     rows.push(row);
     if (!json) {
       console.log(
         `  #${row.n} t=${row.atS}s  peak ${row.peakHz} Hz  SNR ${row.snrDb} dB  guard ${row.guardDb} dB  ` +
-          `click ${row.clickMs} ms  ring ${row.ringMs} ms  tau ${row.tauMs} ms  -20dB ${row.decay20Ms} ms  R2 ${row.r2}`,
+          `click ${row.clickMs} ms  ring ${row.ringMs} ms (window ${row.windowMs})  tau ${row.tauMs} ms  -20dB ${row.decay20Ms} ms  R2 ${row.r2}  ` +
+          (row.accepted ? 'ACCEPTED' : `rejected: ${ev.verdict.failed.map((g) => ev.verdict.gates[g].text).join(' | ')}`),
       );
     }
   }

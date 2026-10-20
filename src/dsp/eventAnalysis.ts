@@ -26,6 +26,16 @@ export interface EventAnalysis {
   decay20Ms: number;
   /** R² of the dB-vs-time fit; ringdown shape confidence. */
   decayR2: number;
+  /** Ringdown window actually used for the final peak/SNR/guard (ms after the click skip): measured, then clamped. */
+  windowMs: number;
+  /** True if the envelope fell back to within eventEndDb of its floor inside the analysed span (a steady tone never does). */
+  ringEnded: boolean;
+  /** Height (dB) of the first post-click envelope frame above the envelope floor. */
+  headroomDb: number;
+  /** Fall (dB) of the envelope from its first frame after the click skip to the end of the ring. */
+  dropDb: number;
+  /** Contiguous 1 ms frames at/after the click skip that stay within 6 dB of the envelope floor. */
+  ringFrames: number;
   /** 1 ms envelope at the peak, dB, from the onset. */
   envelopeDb: Float64Array;
   envelopeFloorDb: number;
@@ -88,7 +98,7 @@ export function analyzeEvent(
   const samples = (msv: number): number => Math.round((msv * sampleRate) / 1000);
   const skipMs = opts.clickSkipMs ?? PARAMS.clickSkipMs;
   const peakWinMs = opts.peakWindowMs ?? 30;
-  const maxRingMs = opts.maxRingMs ?? 120;
+  const maxRingMs = opts.maxRingMs ?? PARAMS.maxRingMs;
   const exclude = opts.toneExcludeFrac ?? 0.12;
   const { bandLoHz: lo, bandHiHz: hi } = PARAMS;
 
@@ -96,9 +106,15 @@ export function analyzeEvent(
   const inBand = bandTrackDb(x, sampleRate, (hz) => hz >= lo && hz <= hi);
   const preFrames = Math.max(0, Math.floor((approxOnset - FRAME * 2) / HOP));
   const floorDb = preFrames >= 8 ? median(inBand.db.subarray(0, preFrames)) : median(inBand.db.slice().sort().subarray(0, Math.max(1, Math.floor(inBand.db.length * 0.2))));
-  let onsetFrame = Math.max(0, Math.floor((approxOnset - FRAME * 2) / HOP));
-  while (onsetFrame < inBand.db.length && inBand.db[onsetFrame]! < floorDb + PARAMS.onsetRiseDb) onsetFrame++;
-  const onsetIndex = Math.min(x.length - 1, inBand.startOf(onsetFrame) + FRAME / 2);
+  // Look for the first fine frame above the floor near the detector's onset; if the broadband rise is too weak
+  // (a narrowband ring in noise), trust the detector's own onset.
+  const searchFrom = Math.max(0, Math.floor((approxOnset - FRAME * 2) / HOP));
+  const searchTo = Math.min(inBand.db.length, searchFrom + Math.ceil((FRAME * 10) / HOP));
+  let onsetFrame = searchFrom;
+  while (onsetFrame < searchTo && inBand.db[onsetFrame]! < floorDb + PARAMS.onsetRiseDb) onsetFrame++;
+  const refined = onsetFrame < searchTo;
+  const onsetIndex = Math.min(x.length - 1, refined ? inBand.startOf(onsetFrame) + FRAME / 2 : Math.max(0, approxOnset));
+  if (!refined) onsetFrame = searchFrom;
 
   // 2) Peak from the window after the click skip.
   const pStart = onsetIndex + samples(skipMs);
@@ -125,10 +141,10 @@ export function analyzeEvent(
       else break;
     }
     ringMs = ms((last + 1) * sub);
-    const i0 = Math.ceil(samples(skipMs) / sub);
-    if (last - i0 >= 2) {
+    const iDecay = Math.ceil(samples(skipMs) / sub);
+    if (last - iDecay >= 2) {
       const ts: number[] = [], ys: number[] = [];
-      for (let i = i0; i <= last; i++) { ts.push(ms(i * sub)); ys.push(envelopeDb[i]!); }
+      for (let i = iDecay; i <= last; i++) { ts.push(ms(i * sub)); ys.push(envelopeDb[i]!); }
       const fit = fitLine(ts, ys);
       decayR2 = fit.r2;
       if (fit.slope < 0) {
@@ -138,10 +154,35 @@ export function analyzeEvent(
     }
   }
 
+  // 4b) Second pass: analyse the window the ring actually occupies (clamped), not a fixed one.
+  const i0 = Math.ceil(samples(skipMs) / sub);
+  let lastFrame = -1;
+  for (let i = 0; i < envelopeDb.length; i++) {
+    if (envelopeDb[i]! >= envelopeFloorDb + PARAMS.eventEndDb) lastFrame = i;
+    else break;
+  }
+  const ringFrames = Math.max(0, lastFrame - i0 + 1);
+  const ringEnded = envelopeDb.length > 0 && lastFrame < envelopeDb.length - 1;
+  const headroomDb = i0 < envelopeDb.length ? envelopeDb[i0]! - envelopeFloorDb : 0;
+  const dropDb = lastFrame > i0 && i0 < envelopeDb.length ? envelopeDb[i0]! - envelopeDb[lastFrame]! : 0;
+  const windowMs = Math.min(PARAMS.windowMaxMs, Math.max(PARAMS.windowMinMs, ringMs - skipMs));
+  let finalPeak = peak;
+  let finalSnr = snrDb;
+  if (peak) {
+    const wEnd = Math.min(x.length, pStart + samples(windowMs));
+    if (wEnd - pStart >= 32) {
+      const second = refinePeak(x.subarray(pStart, wEnd), sampleRate);
+      if (second) {
+        finalPeak = second;
+        finalSnr = toneSnrDb(second.amplitude, second.freqHz, noise, sampleRate);
+      }
+    }
+  }
+
   // 5) Click: energy away from the tone stays above its floor.
   let clickMs = 0;
-  if (peak) {
-    const f0 = peak.freqHz;
+  if (finalPeak) {
+    const f0 = finalPeak.freqHz;
     const off = bandTrackDb(x, sampleRate, (hz) => hz >= lo && hz <= hi && Math.abs(hz - f0) > exclude * f0);
     const offFloor = preFrames >= 8 ? median(off.db.subarray(0, preFrames)) : floorDb;
     // The strong ring leaks through the Hann sidelobes into the off-tone bins; don't count that as click.
@@ -156,6 +197,7 @@ export function analyzeEvent(
   }
 
   return {
-    onsetIndex, onsetMs: ms(onsetIndex), peak, snrDb, clickMs, ringMs, tauMs, decay20Ms, decayR2, envelopeDb, envelopeFloorDb,
+    onsetIndex, onsetMs: ms(onsetIndex), peak: finalPeak, snrDb: finalSnr, clickMs, ringMs, tauMs, decay20Ms, decayR2,
+    windowMs, ringFrames, ringEnded, headroomDb, dropDb, envelopeDb, envelopeFloorDb,
   };
 }
