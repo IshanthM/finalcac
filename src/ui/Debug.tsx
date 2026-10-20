@@ -6,11 +6,10 @@ import { saveWav } from '../audio/wavExport.ts';
 import { PARAMS } from '../dsp/params.ts';
 import { useEngine } from './useEngine.ts';
 import { Spectrogram } from './Spectrogram.tsx';
-import { TopBar } from './TopBar.tsx';
 
-const f1 = (v: number, d = 1): string => (Number.isFinite(v) ? v.toFixed(d) : v > 0 ? '∞' : '—');
+const f1 = (v: number, d = 1): string => (Number.isFinite(v) ? v.toFixed(d) : v > 0 ? '∞' : 'n/a');
 const stamp = (t: number): string => new Date(t).toISOString().replace(/[:.]/g, '-').slice(0, 19);
-const db = (v: number): string => (v <= -199 ? '—' : `${v.toFixed(1)} dB`);
+const db = (v: number): string => (v <= -199 ? 'n/a' : `${v.toFixed(1)} dB`);
 
 function Level() {
   const e = useEngine();
@@ -21,7 +20,7 @@ function Level() {
       <div class="meter debug-meter" role="meter" aria-label="Input level" aria-valuemin={-90} aria-valuemax={0} aria-valuenow={Math.round(dbfs)}>
         <div class="meter-fill" style={{ width: `${pct}%` }} />
       </div>
-      <span class="meter-text">{dbfs <= -119 ? '— dBFS' : `${dbfs.toFixed(0)} dBFS`}</span>
+      <span class="meter-text">{dbfs <= -119 ? 'No signal' : `${dbfs.toFixed(0)} dBFS`}</span>
     </>
   );
 }
@@ -31,7 +30,7 @@ function EventCard({ ev }: { ev: CapturedEvent }) {
   const p = a.peak;
   return (
     <li class="card">
-      <div class="card-head">{new Date(ev.at).toLocaleTimeString()} · {p ? `${f1(p.freqHz, 0)} Hz` : 'no peak'}</div>
+      <div class="card-head">{new Date(ev.at).toLocaleTimeString()}, {p ? `${f1(p.freqHz, 0)} Hz` : 'no peak'}</div>
       <p class={ev.verdict.accepted ? 'verdict ok' : 'verdict no'}>
         {ev.verdict.accepted ? 'ACCEPTED as tag' : `Rejected: ${ev.verdict.failed.join(', ')}`}
       </p>
@@ -42,7 +41,7 @@ function EventCard({ ev }: { ev: CapturedEvent }) {
       </ul>
       <dl class="kv">
         <dt>SNR</dt><dd>{f1(a.snrDb)} dB</dd>
-        <dt>Guard margin</dt><dd>{p ? f1(p.guardMarginDb) : '—'} dB</dd>
+        <dt>Guard margin</dt><dd>{p ? f1(p.guardMarginDb) : 'n/a'} dB</dd>
         <dt>Click</dt><dd>{f1(a.clickMs)} ms</dd>
         <dt>Ring length</dt><dd>{f1(a.ringMs)} ms</dd>
         <dt>Decay τ</dt><dd>{f1(a.tauMs)} ms (−20 dB in {f1(a.decay20Ms)} ms, R² {f1(a.decayR2, 2)})</dd>
@@ -56,7 +55,7 @@ function EventCard({ ev }: { ev: CapturedEvent }) {
 function SnapRow({ s }: { s: Snapshot }) {
   return (
     <li class="row">
-      <span>{new Date(s.at).toLocaleTimeString()} · {(s.samples.length / s.sampleRate).toFixed(1)} s</span>
+      <span>{new Date(s.at).toLocaleTimeString()}, {(s.samples.length / s.sampleRate).toFixed(1)} s</span>
       <button class="btn" onClick={() => void saveWav(s.samples, s.sampleRate, `ring-${stamp(s.at)}.wav`)}>Download</button>
     </li>
   );
@@ -87,7 +86,6 @@ export function Debug() {
   const last = e.events[0];
   return (
     <main class="page">
-      <TopBar title="Debug" home />
       <h1>Debug recorder</h1>
       <div class="actions">
         {!running && state !== 'suspended' && (
@@ -102,17 +100,17 @@ export function Debug() {
 
       <Level />
       <Spectrogram />
-      <p class="muted">8–16 kHz, own FFT of the ring buffer. White tick = onset. Dashed line = {PARAMS.nominalToneHz} Hz nominal.</p>
+      <p class="muted">8 to 16 kHz, own FFT of the ring buffer. White tick = onset. Dashed line = {PARAMS.nominalToneHz} Hz nominal.</p>
 
       <section aria-label="Live readout">
         <h2>Live</h2>
         <dl class="kv">
-          <dt>In-band (9–15.5 kHz)</dt><dd>{db(e.detector?.bandDb ?? -200)} vs floor {db(e.detector?.floorDb ?? -200)}</dd>
+          <dt>In-band (9 to 15.5 kHz)</dt><dd>{db(e.detector?.bandDb ?? -200)} vs floor {db(e.detector?.floorDb ?? -200)}</dd>
           <dt>Onsets seen</dt><dd>{e.onsetCount}</dd>
-          <dt>Peak</dt><dd>{last?.analysis.peak ? `${f1(last.analysis.peak.freqHz, 1)} Hz` : '—'}</dd>
-          <dt>SNR</dt><dd>{last ? `${f1(last.analysis.snrDb)} dB` : '—'}</dd>
-          <dt>Guard margin</dt><dd>{last?.analysis.peak ? `${f1(last.analysis.peak.guardMarginDb)} dB` : '—'}</dd>
-          <dt>Decay τ</dt><dd>{last ? `${f1(last.analysis.tauMs)} ms` : '—'}</dd>
+          <dt>Peak</dt><dd>{last?.analysis.peak ? `${f1(last.analysis.peak.freqHz, 1)} Hz` : 'n/a'}</dd>
+          <dt>SNR</dt><dd>{last ? `${f1(last.analysis.snrDb)} dB` : 'n/a'}</dd>
+          <dt>Guard margin</dt><dd>{last?.analysis.peak ? `${f1(last.analysis.peak.guardMarginDb)} dB` : 'n/a'}</dd>
+          <dt>Decay τ</dt><dd>{last ? `${f1(last.analysis.tauMs)} ms` : 'n/a'}</dd>
         </dl>
       </section>
 
@@ -120,10 +118,10 @@ export function Debug() {
         <h2>Capture</h2>
         <div class="actions">
           <button class="btn" onClick={downloadLast} disabled={!running}>Download last 2 s (WAV)</button>
-          <button class="btn" onClick={() => void record10()} disabled={!running || e.isRecording}>Record 10 s → WAV</button>
+          <button class="btn" onClick={() => void record10()} disabled={!running || e.isRecording}>Record 10 s to WAV</button>
         </div>
         {busy && <p role="status" aria-live="polite">{busy}</p>}
-        <h3>Onset snapshots <small>(0.5 s before → 1 s after)</small></h3>
+        <h3>Onset snapshots <small>(0.5 s before to 1 s after)</small></h3>
         {e.snapshots.length === 0 ? <p class="muted">Ring the tag. Each onset is saved here.</p> : (
           <ul class="list">{e.snapshots.map((s) => <SnapRow s={s} key={s.id} />)}</ul>
         )}
@@ -138,12 +136,12 @@ export function Debug() {
         <h2>Audio</h2>
         <dl class="kv">
           <dt>State</dt><dd>{state} (context {contextState})</dd>
-          <dt>Sample rate</dt><dd>{sampleRate ? `${sampleRate} Hz` : '—'}</dd>
+          <dt>Sample rate</dt><dd>{sampleRate ? `${sampleRate} Hz` : 'n/a'}</dd>
           <dt>Base latency</dt><dd>{f1(baseLatencyMs, 1)} ms</dd>
           <dt>Wake lock</dt><dd>{wakeLockActive() ? 'held' : 'not held'}</dd>
         </dl>
         <h3>Track settings</h3>
-        <pre class="pre">{trackSettings ? JSON.stringify(trackSettings, null, 2) : '—'}</pre>
+        <pre class="pre">{trackSettings ? JSON.stringify(trackSettings, null, 2) : 'n/a'}</pre>
       </section>
     </main>
   );

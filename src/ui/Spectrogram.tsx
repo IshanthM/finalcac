@@ -28,7 +28,7 @@ function colour(t: number): [number, number, number] {
   return [255, 255, 255];
 }
 
-/** Live 8–16 kHz spectrogram from our own FFT of the ring buffer (not an AnalyserNode). */
+/** Live 8 to 16 kHz spectrogram from our own FFT of the ring buffer (not an AnalyserNode). */
 export function Spectrogram() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {

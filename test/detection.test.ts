@@ -125,3 +125,20 @@ describe('look-alikes are rejected', () => {
     expect(accepted(x)).toHaveLength(0);
   });
 });
+
+describe('onset position does not matter (regression: first 1 ms frame can be pure noise)', () => {
+  const rates = [44100, 48000];
+  for (const sr of rates) {
+    it(`accepts a ring whatever its sub-millisecond offset, at ${sr} Hz`, () => {
+      const prof = { ...profile, sampleRate: sr };
+      for (let k = 0; k < 12; k++) {
+        const onsetMs = 600 + k * 0.37; // 12 offsets across several analysis hops
+        const x = gaussianNoise(Math.round(1.2 * sr), 0.0005, 40 + k);
+        addClick(x, sr, onsetMs, 0.3, 2, 140 + k);
+        addTone(x, sr, onsetMs + 1, 13402, 0.05, 8);
+        const hits = scanSignal(x, sr, { ...prof, freqHz: 13402 }).filter((e) => e.verdict.accepted);
+        expect(hits, `offset ${k}`).toHaveLength(1);
+      }
+    });
+  }
+});

@@ -9,13 +9,15 @@ import { closeSession, openSession, sendAck, useSessionStatus } from '../net/ses
 import { go, setState, useAppState } from '../state.ts';
 import { AlertOverlay } from './AlertOverlay.tsx';
 import { EventLog } from './EventLog.tsx';
-import { TopBar } from './TopBar.tsx';
+import { Bezel } from './Bezel.tsx';
+import { Icon } from './Icon.tsx';
+import { Reveal } from './Reveal.tsx';
 
 const FRESH_MS = 2 * 60 * 1000;
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
 
 function ZoneMap({ zones, alarming }: { zones: ZoneInfo[]; alarming: Set<string> }) {
-  if (zones.length === 0) return <p class="empty">No listeners yet. On another phone, choose Listener and enter this store's code.</p>;
+  if (zones.length === 0) return <div class="empty"><span class="tile-ico"><Icon name="mic" /></span><strong>No listeners yet</strong><span>On another phone, choose Listener and enter this store's code.</span></div>;
   return (
     <ul class="zones" aria-label="Zones">
       {zones.map((z) => {
@@ -24,7 +26,7 @@ function ZoneMap({ zones, alarming }: { zones: ZoneInfo[]; alarming: Set<string>
           <li key={z.name} class={`zone ${alarm ? 'alarm' : z.online ? 'online' : 'offline'}`}>
             <span class="zone-name">{z.name}</span>
             <span class="zone-meta">{z.type === 'register' ? 'Register' : z.type === 'fitting' ? 'Fitting room' : 'Floor'}</span>
-            <span class="zone-status">{alarm ? 'TAMPER' : z.online ? 'Listening' : 'Offline'}</span>
+            <span class="zone-status">{alarm ? 'Tamper' : z.online ? 'Listening' : 'Offline'}</span>
           </li>
         );
       })}
@@ -67,7 +69,7 @@ export function Console() {
     });
   }, [code]);
 
-  if (!code) return <main class="page"><TopBar home /><h1>No store joined</h1><button class="btn btn-primary" onClick={() => go('join/staff')}>Open the console</button></main>;
+  if (!code) return <main class="page narrow"><h1>No store joined</h1><button class="btn btn-primary" onClick={() => go('join/staff')}>Open the console</button></main>;
 
   const arm = (): void => { unlockOutputs(); void keepAwake(); setArmed(true); };
   const alarming = new Set(alarms.map((a) => a.zone));
@@ -75,35 +77,50 @@ export function Console() {
   return (
     <main class="page">
       <AlertOverlay onAck={(id) => sendAck(id)} />
-      <TopBar title="Staff" home />
-      <h1>Staff console</h1>
-      <section class="panel code-panel" aria-label="Store code">
-        <span class="eyebrow">Store code</span>
-        <strong class="code-big" aria-label={`Store code ${code.split('').join(' ')}`}>{code}</strong>
-        <span class="muted">Enter this on each listener phone.</span>
-      </section>
-      <p class={`chip ${status === 'open' ? 'ok' : 'warnchip'}`} role="status" aria-live="polite">
-        {status === 'open' ? 'Connected' : status === 'connecting' ? 'Connecting…' : 'Offline · reconnecting'}
-      </p>
-      {!armed && (
-        <section class="panel" aria-label="Enable alerts">
-          <h2 class="warn">Enable alerts</h2>
-          <p>Tap once so this phone can play the siren and speak alerts, then keep this screen open.</p>
-          <button class="btn btn-primary" onClick={arm}>Enable alerts</button>
-        </section>
-      )}
-      <h2>Zones</h2>
-      <ZoneMap zones={zones} alarming={alarming} />
-      <h2>Event log</h2>
-      <EventLog items={incidents} />
-      <h2>Tag profile</h2>
-      {profile
-        ? <p>{hz(profile.freqHz)} Hz, accepts ±{(toleranceFrac(profile.spreadFrac) * 100).toFixed(2)}%. Calibrated {new Date(profile.calibratedAt).toLocaleString()}.</p>
-        : <p class="muted">Not calibrated yet. Calibrate a tag on this phone or on any listener.</p>}
-      <div class="actions">
-        <button class="btn" onClick={() => go('calibrate')}>{profile ? 'Re-calibrate' : 'Calibrate tag'}</button>
-        <a class="btn" href={`${import.meta.env.BASE_URL}dashboard.html?store=${code}`}>Dashboard</a>
-        <button class="btn btn-quiet" onClick={() => { acknowledge(); closeSession(); clearIncidents(); setState({ storeCode: null, role: null }); go(''); }}>Leave store</button>
+      <Reveal as="h1">Staff console</Reveal>
+      <div class="cols two">
+        <div class="sticky stack">
+          <Reveal>
+            <Bezel tone="tan" class="code-card" aria-label="Store code">
+              <span class="eyebrow">Store code</span>
+              <strong class="code-big" aria-label={`Store code ${code.split('').join(' ')}`}>{code}</strong>
+              <span class="muted">Enter this on each listener phone.</span>
+            </Bezel>
+          </Reveal>
+          <Reveal i={1}>
+            <p class={`chip ${status === 'open' ? 'ok' : 'warnchip'}`} role="status" aria-live="polite">
+              {status === 'open' ? 'Connected' : status === 'connecting' ? 'Connecting' : 'Offline, reconnecting'}
+            </p>
+          </Reveal>
+          {!armed && (
+            <Reveal i={2}>
+              <Bezel tone="amber" aria-label="Enable alerts">
+                <h2 class="warn">Enable alerts</h2>
+                <p>Tap once so this phone can play the siren and speak alerts, then keep this screen open.</p>
+                <button class="btn btn-primary" onClick={arm}>Enable alerts</button>
+              </Bezel>
+            </Reveal>
+          )}
+          <Reveal i={3}>
+            <Bezel>
+              <h3>Tag profile</h3>
+              {profile
+                ? <p class="muted"><span class="mono">{hz(profile.freqHz)} Hz</span>, accepts <span class="mono">±{(toleranceFrac(profile.spreadFrac) * 100).toFixed(2)}%</span>. Calibrated {new Date(profile.calibratedAt).toLocaleDateString()}.</p>
+                : <p class="muted">Not calibrated yet. Calibrate a tag on this phone or on any listener.</p>}
+              <div class="actions">
+                <button class="btn" onClick={() => go('calibrate')}>{profile ? 'Recalibrate' : 'Calibrate tag'}</button>
+                <a class="btn" href={`${import.meta.env.BASE_URL}dashboard.html?store=${code}`}>Dashboard</a>
+              </div>
+            </Bezel>
+          </Reveal>
+          <button class="btn btn-quiet" onClick={() => { acknowledge(); closeSession(); clearIncidents(); setState({ storeCode: null, role: null }); go(''); }}>Leave store</button>
+        </div>
+        <div>
+          <Reveal as="h2" style={{ marginTop: '0' }}>Zones</Reveal>
+          <Reveal i={1}><ZoneMap zones={zones} alarming={alarming} /></Reveal>
+          <Reveal as="h2">Event log</Reveal>
+          <Reveal i={1}><EventLog items={incidents} /></Reveal>
+        </div>
       </div>
     </main>
   );

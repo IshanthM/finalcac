@@ -1,7 +1,8 @@
 import { useState } from 'preact/hooks';
 import { CODE_RE, createStore, normalizeCode, storeExists } from '../net/config.ts';
 import { go, setState, type Role } from '../state.ts';
-import { TopBar } from './TopBar.tsx';
+import { Bezel } from './Bezel.tsx';
+import { Reveal } from './Reveal.tsx';
 
 /** Enter a short store code, or create a new store. */
 export function JoinStore({ role, next }: { role: Extract<Role, 'listener' | 'staff'>; next: string }) {
@@ -28,22 +29,25 @@ export function JoinStore({ role, next }: { role: Extract<Role, 'listener' | 'st
   };
 
   return (
-    <main class="page">
-      <TopBar title={role === 'listener' ? 'Listener' : 'Staff'} home />
-      <h1>{role === 'listener' ? 'Join a store' : 'Open the console'}</h1>
-      <p class="lede">Enter the 6-character code from the staff phone, or start a new store.</p>
-      <form class="panel" onSubmit={(ev) => { ev.preventDefault(); if (valid && !busy) void join(); }}>
-        <label class="field">
-          <span>Store code</span>
-          <input
-            class="input code" value={code} inputMode="text" autoCapitalize="characters" autoComplete="off" spellcheck={false}
-            aria-label="Store code" aria-describedby="code-help" maxLength={9} placeholder="K7M2QX"
-            onInput={(e) => setCode(normalizeCode((e.target as HTMLInputElement).value))}
-          />
-        </label>
-        <p id="code-help" class="muted">Letters and numbers only.</p>
-        <button class="btn btn-primary" type="submit" disabled={!valid || busy}>{busy ? 'Checking…' : 'Join store'}</button>
-      </form>
+    <main class="page narrow">
+      <Reveal as="h1">{role === 'listener' ? 'Join a store' : 'Open the console'}</Reveal>
+      <Reveal i={1} as="p" class="lede">Enter the 6-character code from the staff phone, or start a new store.</Reveal>
+      <Reveal i={2}>
+        <form onSubmit={(ev) => { ev.preventDefault(); if (valid && !busy) void join(); }}>
+          <Bezel tone="tan">
+            <label class="field">
+              <span>Store code</span>
+              <input
+                class="input code" value={code} inputMode="text" autoCapitalize="characters" autoComplete="off" spellcheck={false}
+                aria-label="Store code" aria-describedby="code-help" maxLength={9} placeholder="K7M2QX"
+                onInput={(e) => setCode(normalizeCode((e.target as HTMLInputElement).value))}
+              />
+            </label>
+            <p id="code-help" class="muted">Letters and numbers only.</p>
+            <button class="btn btn-primary" type="submit" disabled={!valid || busy}>{busy ? 'Checking' : 'Join store'}</button>
+          </Bezel>
+        </form>
+      </Reveal>
       {err && <p class="error" role="alert">{err}</p>}
       <div class="actions">
         <button class="btn" onClick={() => void create()} disabled={busy}>Create a new store</button>

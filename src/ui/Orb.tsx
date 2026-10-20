@@ -5,8 +5,16 @@ import { engine } from '../audio/engine.ts';
  * The resonance orb: concentric tan rings that swell with the live microphone level and ripple outward when a tag rings.
  * `live` ties it to the capture engine; otherwise it just breathes (used on the home screen).
  */
-export function Orb({ live = false, on = true, small = false }: { live?: boolean; on?: boolean; small?: boolean }) {
+export function Orb({ live = false, on = true, small = false, pingKey = 0 }: { live?: boolean; on?: boolean; small?: boolean; pingKey?: number }) {
   const el = useRef<HTMLDivElement>(null);
+
+  // An external trigger (e.g. tapping the home orb) ripples it too.
+  useEffect(() => {
+    if (!pingKey || !el.current) return;
+    el.current.classList.remove('ping');
+    void el.current.offsetWidth;
+    el.current.classList.add('ping');
+  }, [pingKey]);
 
   useEffect(() => {
     if (!live) return;

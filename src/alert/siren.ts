@@ -1,4 +1,4 @@
-/** Two-tone-sweep siren on a sine (700–1400 Hz): audible, and far below the 9–15.5 kHz detection band. */
+/** Two-tone-sweep siren on a sine (700 to 1400 Hz): audible, and far below the 9 to 15.5 kHz detection band. */
 import { outputContext } from './unlock.ts';
 
 interface Running { stop: () => void }

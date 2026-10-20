@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 
 export async function open(url, wavPath, { viewport = { width: 390, height: 844 }, storage } = {}) {
   const browser = await chromium.launch({ headless: true, channel: 'chromium' });
-  const ctx = await browser.newContext({ viewport });
+  const ctx = await browser.newContext({ viewport, reducedMotion: process.env.E2E_MOTION ? 'no-preference' : 'reduce' });
   if (wavPath) {
     const wav = readFileSync(resolve(wavPath));
     await ctx.route('**/__fake.wav', (r) => r.fulfill({ body: wav, contentType: 'audio/wav' }));

@@ -33,3 +33,12 @@
   Signature: the **resonance orb** (`src/ui/Orb.tsx`): concentric rings that swell with the live mic level and ripple when a ring passes the gates.
   The deck's placeholder logo is not used. Tokens and rules are in `src/style.css`; motion respects `prefers-reduced-motion`.
 - **D17 Calibration UX.** An "agreement strip" plots each ring against the ±0.5% band around the median, so a bad ring is visible before the text says so.
+- **D18 Visual identity v2 (taste pass).** Double-bezel containers (shell 28 = core 22 + 6), one radius scale, one easing curve
+  `cubic-bezier(0.32,0.72,0,1)`, button-in-button primary CTAs, floating glass island nav (the only blurred surface, because it is fixed),
+  Phosphor Light icons (official `@phosphor-icons/core`, no hand-drawn paths), Geist Mono for data (Hz, dB, store code, times), IntersectionObserver
+  reveals, real desktop layouts (hero split, asymmetric bento, two-column console/listener, dashboard bento). Copy: no em dashes, rationed separators.
+- **D19 No ambient animation.** The drifting background was removed: a listener phone runs all day with the mic on, and a full-screen repaint
+  under a live blur costs battery and can starve audio. Only the orb moves, and only for a reason (mic level, a ring, a tap).
+- **D20 Bug found by the test rig: ring-start fragility.** If the refined onset landed a fraction of a millisecond before the click, the first 1 ms
+  envelope frame was pure noise and ring length collapsed to 0, so valid rings failed the ringdown gate (seen at 44.1 kHz, reproduced at 48 kHz).
+  Fixed with a short ring-start search (`ringEndFrame`); regression test sweeps 12 sub-millisecond offsets at 44.1 and 48 kHz.

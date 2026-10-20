@@ -27,6 +27,8 @@ for (const [name, url, storage, act] of screens) {
   const { browser, page } = await open(url, null, { storage });
   await page.waitForTimeout(700);
   if (act) await act(page);
+  await page.evaluate(() => document.querySelectorAll('.reveal').forEach((e) => e.classList.add('in')));
+  await page.waitForTimeout(1300);
   await page.addScriptTag({ content: axeSrc });
   const res = await page.evaluate(async () => (await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] })).violations.map((v) => ({ id: v.id, impact: v.impact, n: v.nodes.length, help: v.help, sample: v.nodes[0].html.slice(0, 120), why: (v.nodes[0].any[0]?.message ?? v.nodes[0].failureSummary ?? '').slice(0, 160) })));
   // Minimum sizes: text >= 18px for body-like text, tap targets >= 48px.

@@ -23,6 +23,9 @@ Plan: `~/.claude/plans/make-an-new-folder-jolly-rainbow.md`. Deadline Oct 26, 20
   icons + service worker (app reopens offline after one visit, e2e-verified), `tools/a11y.mjs`, `tools/e2e-offline.mjs`.
   NOT verified by me (needs a real iPhone): audible siren/speech volume with the mic live, VoiceOver reading order, Wake Lock behaviour, sample rate.
 
+- Design v2 (taste pass) + onset-offset bug fix: 183 unit tests, accessibility audit clean on all screens, all browser e2e green.
+  New: `tools/shots.mjs [--desktop]` screenshots every screen; e2e tools run with reduced motion by default (`E2E_MOTION=1` to opt out).
+
 ## CHECKPOINT 1 (owner sends recordings later; work continues on synthetic data meanwhile)
 Record real rings on the iPhone at `?debug=1`, put WAVs in `recordings/`, run `npm run analyze -- recordings/*.wav`.
 Report: frequency, ring length, click length. Then set `clickSkipMs`, ring window bounds and thresholds in `src/dsp/params.ts`.

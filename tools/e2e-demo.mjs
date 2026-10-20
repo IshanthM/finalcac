@@ -32,7 +32,7 @@ await run({ name: 'Fitting Room 2', type: 'fitting' }, async ({ page }) => {
   await page.getByRole('button', { name: /Acknowledge tamper/ }).click();
   await page.waitForSelector('[role=alertdialog]', { state: 'detached', timeout: 3000 });
   const log = await page.innerText('ul.log');
-  check('acknowledged and logged', /Tamper · acknowledged/.test(log) && /Fitting Room 2/i.test(log), log.replace(/\n/g, ' | '));
+  check('acknowledged and logged', /Tamper, acknowledged/.test(log) && /Fitting Room 2/i.test(log), log.replace(/\n/g, ' | '));
 });
 
 await run({ name: 'Register 1', type: 'register' }, async ({ page }) => {
@@ -48,6 +48,6 @@ await run({ name: 'Fitting Room 2', type: 'fitting' }, async ({ page }) => {
   await page.getByRole('button', { name: 'Test: heard by two zones' }).click();
   await page.waitForSelector('[role=alertdialog]', { timeout: 3000 });
   const text = await page.innerText('[role=alertdialog]');
-  check('dedupe: attributed to the louder zone, other listed', /Fitting Room 2/i.test(text) && /Also heard by: Sales Floor/i.test(text) && /TEST/i.test(text), text.replace(/\n/g, ' | '));
+  check('dedupe: attributed to the louder zone, other listed', /Fitting Room 2/i.test(text) && /Also heard by Sales Floor/i.test(text) && /TEST/i.test(text), text.replace(/\n/g, ' | '));
 });
 process.exit(results.every(Boolean) ? 0 : 1);

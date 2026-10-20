@@ -55,6 +55,22 @@ const HOP = 32;
 /** Off-tone energy this far below the in-band energy is treated as window leakage. */
 const LEAKAGE_DB = 45;
 
+/**
+ * Index of the last frame of the contiguous ring in a 1 ms envelope, or -1 if there is none.
+ * The refined onset can land a fraction of a millisecond before the click, leaving the first sub-frame as pure noise,
+ * so the ring may start a few frames in (RING_START_SLACK) rather than exactly at frame 0.
+ */
+const RING_START_SLACK = 4;
+function ringEndFrame(envDb: Float64Array, floorDb: number): number {
+  const thr = floorDb + PARAMS.eventEndDb;
+  let start = -1;
+  for (let i = 0; i < Math.min(RING_START_SLACK, envDb.length); i++) if (envDb[i]! >= thr) { start = i; break; }
+  if (start < 0) return -1;
+  let last = start;
+  for (let i = start + 1; i < envDb.length && envDb[i]! >= thr; i++) last = i;
+  return last;
+}
+
 function median(values: ArrayLike<number>): number {
   const a = Array.from(values).sort((x, y) => x - y);
   return a.length === 0 ? NaN : a[Math.floor(a.length / 2)]!;
@@ -135,11 +151,7 @@ export function analyzeEvent(
     envelopeDb = narrowbandEnvelopeDb(x, sampleRate, peak.freqHz, onsetIndex, onsetIndex + samples(maxRingMs), sub);
     const noiseEnv = narrowbandEnvelopeDb(x, sampleRate, peak.freqHz, nStart, nEnd, sub);
     envelopeFloorDb = noiseEnv.length ? median(noiseEnv) : -Infinity;
-    let last = -1;
-    for (let i = 0; i < envelopeDb.length; i++) {
-      if (envelopeDb[i]! >= envelopeFloorDb + PARAMS.eventEndDb) last = i;
-      else break;
-    }
+    const last = ringEndFrame(envelopeDb, envelopeFloorDb);
     ringMs = ms((last + 1) * sub);
     const iDecay = Math.ceil(samples(skipMs) / sub);
     if (last - iDecay >= 2) {
@@ -156,11 +168,7 @@ export function analyzeEvent(
 
   // 4b) Second pass: analyse the window the ring actually occupies (clamped), not a fixed one.
   const i0 = Math.ceil(samples(skipMs) / sub);
-  let lastFrame = -1;
-  for (let i = 0; i < envelopeDb.length; i++) {
-    if (envelopeDb[i]! >= envelopeFloorDb + PARAMS.eventEndDb) lastFrame = i;
-    else break;
-  }
+  const lastFrame = ringEndFrame(envelopeDb, envelopeFloorDb);
   const ringFrames = Math.max(0, lastFrame - i0 + 1);
   const ringEnded = envelopeDb.length > 0 && lastFrame < envelopeDb.length - 1;
   const headroomDb = i0 < envelopeDb.length ? envelopeDb[i0]! - envelopeFloorDb : 0;

@@ -1,8 +1,10 @@
 // Screenshots of every screen at phone size: node tools/shots.mjs  → .scratch/shots/*.png
 import { mkdirSync } from 'node:fs';
 import { open } from './e2e-lib.mjs';
+const desktop = process.argv.includes('--desktop');
 const base = 'http://localhost:4173/'; const relay = 'http://localhost:8787';
-mkdirSync('.scratch/shots', { recursive: true });
+const dir = desktop ? '.scratch/shots-desktop' : '.scratch/shots';
+mkdirSync(dir, { recursive: true });
 const profile = { freqHz: 13300, spreadFrac: 0.002, decayMs: 8, sampleRate: 48000, calibratedAt: '2026-10-20T00:00:00Z', rings: [] };
 const { code } = await (await fetch(`${relay}/api/stores`, { method: 'POST' })).json();
 const zone = { name: 'Fitting Room 2', type: 'fitting' };
@@ -11,8 +13,8 @@ const shots = [
   ['home', base, st({}), null],
   ['join', `${base}#/join/listener`, st({ storeCode: null }), null],
   ['zone', `${base}#/listener`, st({ role: 'listener' }), null],
-  ['listener', `${base}#/listener`, st({ role: 'listener', zone }), null, 'single'],
   ['console', `${base}#/console`, st({ role: 'staff' }), null],
+  ['listener', `${base}#/listener`, st({ role: 'listener', zone }), null],
   ['calibrate', `${base}#/calibrate`, st({}), null, 'calib'],
   ['demo', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Test alarm' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.getByRole('button', { name: /Acknowledge/ }).click(); await p.waitForTimeout(400); }],
   ['alert', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Test: heard by two zones' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.waitForTimeout(900); }],
@@ -20,11 +22,13 @@ const shots = [
   ['debug', `${base}?debug=1`, st({}), null],
 ];
 for (const [name, url, storage, act, wav] of shots) {
-  const t = await open(url, wav ? `.scratch/${wav}.wav` : null, { storage });
+  const t = await open(url, wav ? `.scratch/${wav}.wav` : null, { storage, viewport: desktop ? { width: 1280, height: 860 } : { width: 390, height: 844 } });
   await t.page.waitForTimeout(1200);
   if (wav) { await t.page.getByRole('button', { name: 'Start listening' }).click().catch(() => {}); await t.page.waitForTimeout(wav === 'calib' ? 5200 : 2500); }
   if (act) await act(t.page);
-  await t.page.screenshot({ path: `.scratch/shots/${name}.png`, fullPage: name !== 'alert' });
+  await t.page.evaluate(() => document.querySelectorAll('.reveal').forEach((e) => e.classList.add('in')));
+  await t.page.waitForTimeout(1300);
+  await t.page.screenshot({ path: `${dir}/${name}.png`, fullPage: name !== 'alert' });
   await t.browser.close();
 }
 console.log('done');

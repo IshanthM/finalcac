@@ -22,7 +22,7 @@ check('console shows the store code', (await con.page.innerText('.code-big')).tr
 
 // Listener A: Fitting Room 2, online, hears a ring
 const A = await open(`${base}#/listener`, '.scratch/single.wav', { storage: st('listener', { zone: { name: 'Fitting Room 2', type: 'fitting' } }) });
-await A.page.waitForFunction(() => /· connected/.test(document.body.innerText), null, { timeout: 8000 });
+await A.page.waitForFunction(() => /connected/.test(document.body.innerText), null, { timeout: 8000 });
 await sleep(500);
 const zonesText = await con.page.innerText('.zones');
 check('console sees the listener zone online', /Fitting Room 2/i.test(zonesText) && /Listening/.test(zonesText), zonesText);
@@ -40,7 +40,7 @@ await con.page.getByRole('button', { name: /Acknowledge tamper/ }).click();
 await con.page.waitForSelector('[role=alertdialog]', { state: 'detached', timeout: 4000 });
 await sleep(500);
 const rows = await con.page.innerText('ul.log');
-check('console log shows the tamper as acknowledged', /Tamper · acknowledged/.test(rows), rows.replace(/\n/g, ' | '));
+check('console log shows the tamper as acknowledged', /Tamper, acknowledged/.test(rows), rows.replace(/\n/g, ' | '));
 const dash = await open(`${base}dashboard.html?store=${code}`, null, { storage: { 'resonance.relay': relay } });
 await dash.page.waitForSelector('.stats', { timeout: 8000 });
 const dtxt = await dash.page.innerText('main');
