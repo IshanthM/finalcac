@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "deploy": "bash scripts/deploy-pages.sh",
+    "fixtures": "node --experimental-strip-types tools/make-fixtures.ts single && node --experimental-strip-types tools/make-fixtures.ts calib && node --experimental-strip-types tools/make-fixtures.ts calib-outlier",
     "analyze": "node --experimental-strip-types tools/analyze-wav.ts"
   },
   "dependencies": {
