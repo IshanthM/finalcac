@@ -1,6 +1,29 @@
+# dependencies and build output
 node_modules
 dist
+
+# secrets and local config (never commit)
+.env
+.env.*
+!.env.example
+*.local
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+*.p12
+.npmrc.local
+
+# Cloudflare / wrangler local state (holds your account id and local DB)
 .wrangler
+.wrangler-state
+wrangler.local.toml
+
+# tag recordings may contain room audio: keep them local
+recordings/*
+!recordings/.gitkeep
+
+# scratch, logs, OS
+.scratch
 *.log
 .DS_Store
-.scratch
