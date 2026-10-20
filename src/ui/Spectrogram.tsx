@@ -11,12 +11,21 @@ const HI = 16000;
 const DB_MIN = -95;
 const DB_MAX = -30;
 
-/** Heat colour: black → deep yellow → white. */
+/** Heat colour in the app palette: black → navy → blue → amber/tan → white. */
+const STOPS: [number, [number, number, number]][] = [
+  [0, [0, 0, 0]], [0.28, [17, 52, 98]], [0.55, [22, 73, 121]], [0.78, [210, 185, 154]], [1, [255, 255, 255]],
+];
 function colour(t: number): [number, number, number] {
   const v = Math.max(0, Math.min(1, t));
-  if (v < 0.6) { const k = v / 0.6; return [Math.round(255 * k), Math.round(214 * k * 0.8), 0]; }
-  const k = (v - 0.6) / 0.4;
-  return [255, Math.round(171 + 84 * k), Math.round(255 * k)];
+  for (let i = 1; i < STOPS.length; i++) {
+    const [t1, c1] = STOPS[i]!;
+    if (v <= t1) {
+      const [t0, c0] = STOPS[i - 1]!;
+      const k = (v - t0) / (t1 - t0);
+      return [Math.round(c0[0] + (c1[0] - c0[0]) * k), Math.round(c0[1] + (c1[1] - c0[1]) * k), Math.round(c0[2] + (c1[2] - c0[2]) * k)];
+    }
+  }
+  return [255, 255, 255];
 }
 
 /** Live 8–16 kHz spectrogram from our own FFT of the ring buffer (not an AnalyserNode). */
@@ -54,7 +63,7 @@ export function Spectrogram() {
       g.putImageData(img, COLS - 1, 0);
       if (engine.onsetCount !== lastOnsets) {
         lastOnsets = engine.onsetCount;
-        g.fillStyle = '#ffffff';
+        g.fillStyle = '#d2b99a';
         g.fillRect(COLS - 3, 0, 2, 6);
       }
     };

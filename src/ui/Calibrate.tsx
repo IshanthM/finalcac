@@ -7,6 +7,8 @@ import { toleranceFrac, type TagProfile } from '../dsp/profile.ts';
 import { PARAMS } from '../dsp/params.ts';
 import { pushProfile } from '../net/session.ts';
 import { getState, goBack, setState } from '../state.ts';
+import { Icon } from './Icon.tsx';
+import { TopBar } from './TopBar.tsx';
 import { useEngine } from './useEngine.ts';
 
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
@@ -65,8 +67,9 @@ export function Calibrate() {
 
   return (
     <main class="page">
+      <TopBar title="Calibrate" />
       <h1>Calibrate tag</h1>
-      <p>Ring the tag {PARAMS.calibRings} separate times, re-arming it between rings. Using different tags across the rings makes the profile cover tag-to-tag spread.</p>
+      <p class="lede">Ring the tag {PARAMS.calibRings} separate times and re-arm it between rings. Use different tags to cover tag-to-tag spread.</p>
       {!running && (
         <div class="actions">
           <button class="btn btn-primary" onClick={start} disabled={e.info.state === 'starting'}>Start listening</button>
@@ -77,6 +80,7 @@ export function Calibrate() {
       <ol class="rings" aria-label="Calibration rings">
         {rings.map((r, i) => (
           <li key={i} class={`ring ${r ? 'done' : i === next ? 'current' : ''}`} aria-current={i === next ? 'step' : undefined}>
+            <span class="ring-dot" aria-hidden="true">{r ? <Icon name="check" /> : i + 1}</span>
             <span class="ring-n">Ring {i + 1}</span>
             <span class="ring-v">{r ? `${hz(r.freqHz)} Hz` : i === next ? (running ? 'listening…' : 'waiting') : '—'}</span>
           </li>
@@ -84,6 +88,8 @@ export function Calibrate() {
       </ol>
 
       <p role="status" aria-live="polite" class="note">{note || (running && next >= 0 ? `Ring ${next + 1} of ${rings.length}: ring the tag now.` : '')}</p>
+
+      <AgreementStrip rings={rings} />
 
       {status.kind === 'disagree' && (
         <section class="panel" aria-label="Rings that disagree">
@@ -113,7 +119,7 @@ export function Calibrate() {
             {!saved
               ? <button class="btn btn-primary" onClick={save}>Save as store tag profile</button>
               : <button class="btn btn-primary" onClick={() => goBack()}>Saved. Go back</button>}
-            <button class="btn" onClick={reset}>Start over</button>
+            <button class="btn btn-quiet" onClick={reset}>Start over</button>
           </div>
         </section>
       )}
@@ -121,7 +127,31 @@ export function Calibrate() {
       {getState().profile && status.kind !== 'ok' && (
         <p class="muted">Current profile: {hz(getState().profile!.freqHz)} Hz ±{(toleranceFrac(getState().profile!.spreadFrac) * 100).toFixed(2)}%. Finishing a new calibration replaces it.</p>
       )}
-      <div class="actions"><button class="btn" onClick={() => goBack()}>Back</button>{status.kind !== 'ok' && <button class="btn" onClick={reset}>Start over</button>}</div>
+      {status.kind !== 'ok' && <div class="actions"><button class="btn btn-quiet" onClick={reset}>Start over</button></div>}
     </main>
+  );
+}
+
+/** Each finished ring as a dot against the ±agreement band around the median: agreement at a glance. */
+function AgreementStrip({ rings }: { rings: (CalibrationRing | null)[] }) {
+  const have = rings.filter((r): r is CalibrationRing => r !== null);
+  if (have.length < 2) return null;
+  const sorted = have.map((r) => r.freqHz).sort((a, b) => a - b);
+  const med = sorted.length % 2 ? sorted[(sorted.length - 1) / 2]! : (sorted[sorted.length / 2 - 1]! + sorted[sorted.length / 2]!) / 2;
+  const agree = PARAMS.calibAgreeFrac;
+  const devs = have.map((r) => (r.freqHz - med) / med);
+  const span = Math.max(agree * 1.6, Math.max(...devs.map(Math.abs)) * 1.15);
+  const pos = (d: number): number => 50 + (d / span) * 50;
+  const worst = Math.max(...devs.map(Math.abs));
+  return (
+    <div class="agree" role="img" aria-label={`Ring agreement: the largest difference from the median is ${(worst * 100).toFixed(2)} percent; the limit is ${(agree * 100).toFixed(1)} percent.`}>
+      <div class="agree-track" aria-hidden="true">
+        <span class="agree-line" />
+        <span class="agree-band" style={{ left: `${pos(-agree)}%`, width: `${pos(agree) - pos(-agree)}%` }} />
+        <span class="agree-mid" style={{ left: '50%' }} />
+        {devs.map((d, i) => <span key={i} class={`agree-dot ${Math.abs(d) > agree ? 'off' : ''}`} style={{ left: `${Math.max(2, Math.min(98, pos(d)))}%` }} />)}
+      </div>
+      <div class="agree-cap" aria-hidden="true"><span>−{(span * 100).toFixed(2)}%</span><span>median {hz(med)} Hz</span><span>+{(span * 100).toFixed(2)}%</span></div>
+    </div>
   );
 }

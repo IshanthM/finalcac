@@ -6,6 +6,7 @@ import { saveWav } from '../audio/wavExport.ts';
 import { PARAMS } from '../dsp/params.ts';
 import { useEngine } from './useEngine.ts';
 import { Spectrogram } from './Spectrogram.tsx';
+import { TopBar } from './TopBar.tsx';
 
 const f1 = (v: number, d = 1): string => (Number.isFinite(v) ? v.toFixed(d) : v > 0 ? '∞' : '—');
 const stamp = (t: number): string => new Date(t).toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -16,10 +17,12 @@ function Level() {
   const dbfs = e.level.peak > 0 ? 20 * Math.log10(e.level.peak) : -120;
   const pct = Math.max(0, Math.min(100, ((dbfs + 90) / 90) * 100));
   return (
-    <div class="meter" role="meter" aria-label="Input level" aria-valuemin={-90} aria-valuemax={0} aria-valuenow={Math.round(dbfs)}>
-      <div class="meter-fill" style={{ width: `${pct}%` }} />
-      <span class="meter-text">{dbfs <= -119 ? '—' : `${dbfs.toFixed(0)} dBFS`}</span>
-    </div>
+    <>
+      <div class="meter debug-meter" role="meter" aria-label="Input level" aria-valuemin={-90} aria-valuemax={0} aria-valuenow={Math.round(dbfs)}>
+        <div class="meter-fill" style={{ width: `${pct}%` }} />
+      </div>
+      <span class="meter-text">{dbfs <= -119 ? '— dBFS' : `${dbfs.toFixed(0)} dBFS`}</span>
+    </>
   );
 }
 
@@ -84,7 +87,8 @@ export function Debug() {
   const last = e.events[0];
   return (
     <main class="page">
-      <h1>Debug <small>Resonance v0.1</small></h1>
+      <TopBar title="Debug" home />
+      <h1>Debug recorder</h1>
       <div class="actions">
         {!running && state !== 'suspended' && (
           <button class="btn btn-primary" onClick={start} disabled={state === 'starting'}>

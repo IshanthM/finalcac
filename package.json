@@ -21,6 +21,7 @@
     "fake-listener": "node --experimental-strip-types tools/fake-listener.ts"
   },
   "dependencies": {
+    "@fontsource/poppins": "^5.3.0",
     "preact": "^10.26.0"
   },
   "devDependencies": {

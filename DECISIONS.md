@@ -27,3 +27,9 @@
   extend "also heard by" (an update), so staff are not told one zone and then another.
 - **D14 One dedupe for both paths.** `src/dsp/dedupe.ts` runs in the demo hub and in the Durable Object, so demo and cloud behave the same.
 - **D15 Relay URL** is build-time `VITE_RELAY_URL` or a remembered `?relay=` query; default is localhost for development.
+- **D16 Visual identity (from the team's "Dark Blue Gradient" deck).** Palette sampled from the PDF: black `#000`, blue glow `#0B3F7A`/`#164979`,
+  amber glow `#C27A3E`, tan accent `#D2B99A`, navy track `#113462`, white text. Red is only for tamper alerts. Poppins (self-hosted via
+  `@fontsource`, so it works offline): light uppercase headings with a short tan rule like the slides, 600 for subheads, 400 body.
+  Signature: the **resonance orb** (`src/ui/Orb.tsx`): concentric rings that swell with the live mic level and ripple when a ring passes the gates.
+  The deck's placeholder logo is not used. Tokens and rules are in `src/style.css`; motion respects `prefers-reduced-motion`.
+- **D17 Calibration UX.** An "agreement strip" plots each ring against the ±0.5% band around the median, so a bad ring is visible before the text says so.

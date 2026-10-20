@@ -1,5 +1,10 @@
 import { render } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
+import '@fontsource/poppins/latin-300.css';
+import '@fontsource/poppins/latin-400.css';
+import '@fontsource/poppins/latin-500.css';
+import '@fontsource/poppins/latin-600.css';
+import '@fontsource/poppins/latin-700.css';
 import './style.css';
 import type { ZoneInfo } from '../worker/src/protocol.ts';
 import type { Incident } from './dsp/dedupe.ts';
@@ -64,7 +69,8 @@ function Dashboard() {
 
   return (
     <main class="page wide">
-      <h1>Resonance dashboard</h1>
+      <p class="eyebrow">Dashboard</p>
+      <h1>Store events</h1>
       <form class="inline" onSubmit={(e) => { e.preventDefault(); if (CODE_RE.test(input)) { setCode(input); history.replaceState(null, '', `?store=${input}`); } }}>
         <label class="sr-only" for="sc">Store code</label>
         <input id="sc" class="input code" value={input} placeholder="STORE CODE" autoCapitalize="characters" autoComplete="off" spellcheck={false} maxLength={9}
@@ -72,21 +78,21 @@ function Dashboard() {
         <button class="btn btn-primary" type="submit" disabled={!CODE_RE.test(input)}>Show store</button>
       </form>
       {err && <p class="error" role="alert">{err}</p>}
-      {!CODE_RE.test(code) && <p class="muted">Enter the store code shown on the staff console.</p>}
+      {!CODE_RE.test(code) && <p class="lede">Enter the store code shown on the staff console to see its events.</p>}
 
       {data && (
         <>
           <p class="muted" aria-live="polite">Store {code} · updated {new Date(updated).toLocaleTimeString()}</p>
           <div class="stats">
-            <div class="stat"><span class="stat-n">{tampers.length}</span><span>Tamper alerts</span></div>
-            <div class="stat"><span class={`stat-n ${open.length ? 'redn' : ''}`}>{open.length}</span><span>Unacknowledged</span></div>
-            <div class="stat"><span class="stat-n">{checkouts.length}</span><span>Checkouts</span></div>
-            <div class="stat"><span class="stat-n">{online}/{data.zones.length}</span><span>Zones online</span></div>
+            <div class="stat"><span class="stat-n">{tampers.length}</span><span class="stat-l">Tamper alerts</span></div>
+            <div class="stat"><span class={`stat-n ${open.length ? 'redn' : ''}`}>{open.length}</span><span class="stat-l">Open alerts</span></div>
+            <div class="stat"><span class="stat-n">{checkouts.length}</span><span class="stat-l">Checkouts</span></div>
+            <div class="stat"><span class="stat-n">{online}/{data.zones.length}</span><span class="stat-l">Zones online</span></div>
           </div>
           <h2>Tamper alerts by zone</h2>
           <ZoneBars items={data.incidents} />
           <h2>Zones</h2>
-          <table class="log" aria-label="Zones">
+          <table class="dtable" aria-label="Zones">
             <thead><tr><th scope="col">Zone</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Last heard</th></tr></thead>
             <tbody>{data.zones.map((z) => (
               <tr key={z.name}><td>{z.name}</td><td>{z.type}</td><td>{z.online ? 'Listening' : 'Offline'}</td><td>{new Date(z.lastSeen).toLocaleTimeString()}</td></tr>
@@ -100,7 +106,7 @@ function Dashboard() {
           <EventLog items={data.incidents} />
         </>
       )}
-      <p><a class="btn" href={import.meta.env.BASE_URL}>Back to app</a></p>
+      <div class="actions"><a class="btn" href={import.meta.env.BASE_URL}>Back to the app</a></div>
     </main>
   );
 }

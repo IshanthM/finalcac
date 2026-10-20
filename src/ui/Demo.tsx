@@ -9,6 +9,7 @@ import { getState, go, setState, useAppState } from '../state.ts';
 import { AlertOverlay } from './AlertOverlay.tsx';
 import { EventLog } from './EventLog.tsx';
 import { ListenerHero } from './ListenerHero.tsx';
+import { TopBar } from './TopBar.tsx';
 import { useEngine } from './useEngine.ts';
 import { ZoneForm } from './ZoneForm.tsx';
 
@@ -43,11 +44,12 @@ export function Demo() {
   return (
     <main class="page">
       <AlertOverlay />
-      <p class="kicker">Demo mode · this phone is both listener and staff console</p>
+      <TopBar title="Demo mode" home />
 
       {!zone ? (
         <>
           <h1>Set up this zone</h1>
+          <p class="lede">In demo mode this phone is both the listener and the staff console.</p>
           <ZoneForm initial={null} cta="Save zone" onSave={(z) => setState({ zone: z, role: 'demo' })} />
         </>
       ) : (
@@ -56,16 +58,16 @@ export function Demo() {
           {!s.profile && (
             <section class="panel" aria-label="Calibration needed">
               <h2 class="warn">Calibrate first</h2>
-              <p>No tag profile yet, so real rings will not be accepted.</p>
+              <p>Without a tag profile, real rings are not accepted. The test buttons below still work.</p>
               <button class="btn btn-primary" onClick={() => go('calibrate')}>Calibrate tag</button>
             </section>
           )}
-          <div class="actions">
+          <div class="actions" style={{ justifyContent: 'center' }}>
             {!running && e.info.state !== 'suspended' && (
               <button class="btn btn-primary" onClick={start} disabled={e.info.state === 'starting'}>Start listening</button>
             )}
-            {running && <button class="btn" onClick={() => e.stop()}>Stop</button>}
-            <button class="btn" onClick={() => setState({ zone: null })}>Change zone</button>
+            {running && <button class="btn" onClick={() => e.stop()}>Stop listening</button>}
+            <button class="btn btn-quiet" onClick={() => setState({ zone: null })}>Change zone</button>
           </div>
           {e.info.error && <p class="error" role="alert">Mic error: {e.info.error}</p>}
 
@@ -74,12 +76,11 @@ export function Demo() {
           <div class="actions">
             <button class="btn" onClick={test}>Test alarm</button>
             <button class="btn" onClick={testTwo}>Test: heard by two zones</button>
-            <button class="btn" onClick={() => clearIncidents()}>Clear log</button>
+            <button class="btn btn-quiet" onClick={() => clearIncidents()}>Clear log</button>
           </div>
-          <p class="muted">Tests go through the same dedupe, register rule and alert path as a real ring, and are marked “test” in the log.</p>
+          <p class="muted">Tests use the same dedupe, register rule and alert as a real ring, and are marked “test” in the log.</p>
         </>
       )}
-      <div class="actions"><button class="btn" onClick={() => go('')}>Back</button></div>
     </main>
   );
 }

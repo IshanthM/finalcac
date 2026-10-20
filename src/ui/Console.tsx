@@ -9,12 +9,13 @@ import { closeSession, openSession, sendAck, useSessionStatus } from '../net/ses
 import { go, setState, useAppState } from '../state.ts';
 import { AlertOverlay } from './AlertOverlay.tsx';
 import { EventLog } from './EventLog.tsx';
+import { TopBar } from './TopBar.tsx';
 
 const FRESH_MS = 2 * 60 * 1000;
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
 
 function ZoneMap({ zones, alarming }: { zones: ZoneInfo[]; alarming: Set<string> }) {
-  if (zones.length === 0) return <p class="muted">No listeners yet. Join a store on another phone with this store's code.</p>;
+  if (zones.length === 0) return <p class="empty">No listeners yet. On another phone, choose Listener and enter this store's code.</p>;
   return (
     <ul class="zones" aria-label="Zones">
       {zones.map((z) => {
@@ -66,7 +67,7 @@ export function Console() {
     });
   }, [code]);
 
-  if (!code) return <main class="page"><p>No store joined.</p><button class="btn" onClick={() => go('join/staff')}>Open the console</button></main>;
+  if (!code) return <main class="page"><TopBar home /><h1>No store joined</h1><button class="btn btn-primary" onClick={() => go('join/staff')}>Open the console</button></main>;
 
   const arm = (): void => { unlockOutputs(); void keepAwake(); setArmed(true); };
   const alarming = new Set(alarms.map((a) => a.zone));
@@ -74,9 +75,10 @@ export function Console() {
   return (
     <main class="page">
       <AlertOverlay onAck={(id) => sendAck(id)} />
+      <TopBar title="Staff" home />
       <h1>Staff console</h1>
       <section class="panel code-panel" aria-label="Store code">
-        <span class="muted">Store code</span>
+        <span class="eyebrow">Store code</span>
         <strong class="code-big" aria-label={`Store code ${code.split('').join(' ')}`}>{code}</strong>
         <span class="muted">Enter this on each listener phone.</span>
       </section>
@@ -86,7 +88,7 @@ export function Console() {
       {!armed && (
         <section class="panel" aria-label="Enable alerts">
           <h2 class="warn">Enable alerts</h2>
-          <p>Tap once so this phone can play the siren and speak alerts. Keep this screen open.</p>
+          <p>Tap once so this phone can play the siren and speak alerts, then keep this screen open.</p>
           <button class="btn btn-primary" onClick={arm}>Enable alerts</button>
         </section>
       )}
@@ -101,7 +103,7 @@ export function Console() {
       <div class="actions">
         <button class="btn" onClick={() => go('calibrate')}>{profile ? 'Re-calibrate' : 'Calibrate tag'}</button>
         <a class="btn" href={`${import.meta.env.BASE_URL}dashboard.html?store=${code}`}>Dashboard</a>
-        <button class="btn" onClick={() => { acknowledge(); closeSession(); clearIncidents(); setState({ storeCode: null, role: null }); go(''); }}>Leave store</button>
+        <button class="btn btn-quiet" onClick={() => { acknowledge(); closeSession(); clearIncidents(); setState({ storeCode: null, role: null }); go(''); }}>Leave store</button>
       </div>
     </main>
   );

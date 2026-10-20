@@ -12,6 +12,7 @@ import { closeSession, consolesOnline, nudgeSession, openSession, pushProfile, s
 import { getState, go, setState, useAppState } from '../state.ts';
 import { AlertOverlay } from './AlertOverlay.tsx';
 import { ListenerHero } from './ListenerHero.tsx';
+import { TopBar } from './TopBar.tsx';
 import { useEngine } from './useEngine.ts';
 import { ZoneForm } from './ZoneForm.tsx';
 
@@ -83,14 +84,14 @@ export function Listener() {
     }
   }
 
-  if (!code) return <main class="page"><p>No store joined.</p><button class="btn" onClick={() => go('join/listener')}>Join a store</button></main>;
+  if (!code) return <main class="page"><TopBar home /><h1>No store joined</h1><button class="btn btn-primary" onClick={() => go('join/listener')}>Join a store</button></main>;
   if (!zone) {
     return (
       <main class="page">
+        <TopBar title="Listener" home />
         <h1>Name this listener</h1>
-        <p class="muted">Store {code}. Each phone gets a zone, so staff know where a ring was heard.</p>
+        <p class="lede">Store {code}. Each phone gets a zone, so staff know where a ring was heard.</p>
         <ZoneForm initial={null} cta="Save zone" onSave={(z) => setState({ zone: z })} />
-        <div class="actions"><button class="btn" onClick={() => go('')}>Back</button></div>
       </main>
     );
   }
@@ -102,24 +103,25 @@ export function Listener() {
     handleReport({ zone: zone.name, zoneType: zone.type, snrDb: 24, freqHz: s.profile?.freqHz ?? 13300, test: true }, true);
   };
   const connLabel = status === 'open'
-    ? `Connected to store ${code}${consolesOnline() === 0 ? ' · no staff console online' : ''}`
+    ? `Store ${code}${consolesOnline() === 0 ? ' · no staff console online' : ' · connected'}`
     : status === 'connecting' ? 'Connecting…' : 'Offline · alerts stay on this phone';
 
   return (
     <main class="page">
       <AlertOverlay onAck={() => undefined} />
+      <TopBar title="Listener" home />
       <p class={`chip ${status === 'open' ? 'ok' : 'warnchip'}`} role="status" aria-live="polite">{connLabel}</p>
       <ListenerHero zone={zone} />
       {!s.profile && (
         <section class="panel" aria-label="Calibration needed">
           <h2 class="warn">Calibrate first</h2>
-          <p>This store has no tag profile yet. Calibrate once; every listener in the store gets it.</p>
+          <p>This store has no tag profile yet. Calibrate once and every listener in the store gets it.</p>
           <button class="btn btn-primary" onClick={() => go('calibrate')}>Calibrate tag</button>
         </section>
       )}
-      <div class="actions">
+      <div class="actions" style={{ justifyContent: 'center' }}>
         {!running && e.info.state !== 'suspended' && <button class="btn btn-primary" onClick={start} disabled={e.info.state === 'starting'}>Start listening</button>}
-        {running && <button class="btn" onClick={() => e.stop()}>Stop</button>}
+        {running && <button class="btn" onClick={() => e.stop()}>Stop listening</button>}
         <button class="btn" onClick={test}>Test alert</button>
       </div>
       {e.info.error && <p class="error" role="alert">Mic error: {e.info.error}</p>}
@@ -130,8 +132,8 @@ export function Listener() {
         </>
       )}
       <div class="actions">
-        <button class="btn" onClick={() => setState({ zone: null })}>Change zone</button>
-        <button class="btn" onClick={() => { acknowledge(); closeSession(); e.stop(); setState({ storeCode: null, role: null, zone: null }); go(''); }}>Leave store</button>
+        <button class="btn btn-quiet" onClick={() => setState({ zone: null })}>Change zone</button>
+        <button class="btn btn-quiet" onClick={() => { acknowledge(); closeSession(); e.stop(); setState({ storeCode: null, role: null, zone: null }); go(''); }}>Leave store</button>
       </div>
     </main>
   );

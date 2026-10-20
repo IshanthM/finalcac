@@ -22,29 +22,29 @@ check('console shows the store code', (await con.page.innerText('.code-big')).tr
 
 // Listener A: Fitting Room 2, online, hears a ring
 const A = await open(`${base}#/listener`, '.scratch/single.wav', { storage: st('listener', { zone: { name: 'Fitting Room 2', type: 'fitting' } }) });
-await A.page.waitForFunction(() => /Connected to store/.test(document.body.innerText), null, { timeout: 8000 });
+await A.page.waitForFunction(() => /· connected/.test(document.body.innerText), null, { timeout: 8000 });
 await sleep(500);
 const zonesText = await con.page.innerText('.zones');
-check('console sees the listener zone online', /Fitting Room 2/.test(zonesText) && /Listening/.test(zonesText), zonesText);
+check('console sees the listener zone online', /Fitting Room 2/i.test(zonesText) && /Listening/.test(zonesText), zonesText);
 const chipA = (await A.page.innerText('.chip')).trim();
 check('listener knows a console is online', !/no staff console/.test(chipA), chipA);
 await A.page.getByRole('button', { name: 'Start listening' }).click();
 
 await con.page.waitForSelector('[role=alertdialog]', { timeout: 25000 });
 const alert = await con.page.innerText('[role=alertdialog]');
-check('ring on the listener raises the full-screen alert on the console', /Fitting Room 2/.test(alert) && /TAMPER/.test(alert), alert.replace(/\n/g, ' | '));
+check('ring on the listener raises the full-screen alert on the console', /Fitting Room 2/i.test(alert) && /TAMPER/i.test(alert), alert.replace(/\n/g, ' | '));
 await con.page.screenshot({ path: '.scratch/console-alert.png' });
 check('listener stays quiet when staff are reachable (no local alarm)', (await A.page.locator('[role=alertdialog]').count()) === 0);
 check('listener notes that staff were alerted', /Staff alerted/.test(await A.page.innerText('main')));
 await con.page.getByRole('button', { name: /Acknowledge tamper/ }).click();
 await con.page.waitForSelector('[role=alertdialog]', { state: 'detached', timeout: 4000 });
 await sleep(500);
-const rows = await con.page.innerText('table.log');
-check('console log shows the tamper as acknowledged', /Tamper \(acknowledged\)/.test(rows), rows.replace(/\n/g, ' | '));
+const rows = await con.page.innerText('ul.log');
+check('console log shows the tamper as acknowledged', /Tamper · acknowledged/.test(rows), rows.replace(/\n/g, ' | '));
 const dash = await open(`${base}dashboard.html?store=${code}`, null, { storage: { 'resonance.relay': relay } });
 await dash.page.waitForSelector('.stats', { timeout: 8000 });
 const dtxt = await dash.page.innerText('main');
-check('dashboard counts the alert and shows the zone', /1\s*Tamper alerts/.test(dtxt) && /Fitting Room 2/.test(dtxt), dtxt.replace(/\n/g, ' | ').slice(0, 300));
+check('dashboard counts the alert and shows the zone', /1\s*Tamper alerts/.test(dtxt) && /Fitting Room 2/i.test(dtxt), dtxt.replace(/\n/g, ' | ').slice(0, 300));
 await dash.page.screenshot({ path: '.scratch/dashboard.png', fullPage: true });
 check('profile was shared to the store by the listener', /13,287 Hz/.test(dtxt));
 
@@ -55,12 +55,12 @@ const B = await open(`${base}#/listener`, '.scratch/single.wav', { storage: { ..
 await B.page.getByRole('button', { name: 'Start listening' }).click();
 await B.page.waitForSelector('[role=alertdialog]', { timeout: 25000 });
 const local = await B.page.innerText('[role=alertdialog]');
-check('offline listener still alarms locally', /Fitting Room 1/.test(local) && /TAMPER/.test(local), local.replace(/\n/g, ' | '));
+check('offline listener still alarms locally', /Fitting Room 1/i.test(local) && /TAMPER/i.test(local), local.replace(/\n/g, ' | '));
 await B.page.getByRole('button', { name: /Acknowledge tamper/ }).click();
 await B.page.evaluate((r) => localStorage.setItem('resonance.relay', r), relay);
 await con.page.waitForSelector('[role=alertdialog]', { timeout: 30000 });
 const late = await con.page.innerText('[role=alertdialog]');
-check('queued detection reaches the console after reconnect, marked delayed', /Fitting Room 1/.test(late) && /delayed/.test(late), late.replace(/\n/g, ' | '));
+check('queued detection reaches the console after reconnect, marked delayed', /Fitting Room 1/i.test(late) && /delayed/i.test(late), late.replace(/\n/g, ' | '));
 
 const noisy = /Failed to load resource|WebSocket connection|ERR_CONNECTION|ERR_/;
 check('no console errors anywhere', [con, A, B, dash].every((t) => t.errors.filter((e) => !noisy.test(e)).length === 0), JSON.stringify([con, A, B, dash].map((t) => t.errors)));
