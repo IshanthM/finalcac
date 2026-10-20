@@ -15,6 +15,7 @@ npm install          # .npmrc points at registry.yarnpkg.com (registry.npmjs.org
 npm test             # Vitest: DSP on synthetic signals (run after every DSP change)
 npm run dev          # Vite dev server (the mic needs HTTPS or localhost)
 npm run build
+npm run deploy       # builds and pushes dist/ to the gh-pages branch (GitHub Pages)
 npm run analyze -- recordings/*.wav     # measure real rings from WAVs
 ```
 All DSP is in `src/dsp` as pure functions (no DOM). Every tunable is in `src/dsp/params.ts`.

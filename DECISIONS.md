@@ -11,3 +11,5 @@
 - **D6 Click measurement resolution** is about one 2.7 ms frame; off-tone energy within 45 dB of in-band energy is treated as window leakage.
 - **D7 Browser e2e** (`tools/e2e-capture.mjs`) replaces getUserMedia with a WebAudio stream playing a synthetic WAV, because
   Chromium's fake-device flags do not resolve getUserMedia on the dev Mac. Everything after the mic is real.
+- **D8 Deploy.** GitHub Pages serves the `gh-pages` branch, pushed by `scripts/deploy-pages.sh`. An Actions workflow was dropped
+  because the local `gh` token has no `workflow` scope; the script needs no extra scope. (An Actions workflow can be added later after `gh auth refresh -s workflow`.)

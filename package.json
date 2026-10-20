@@ -10,6 +10,7 @@
     "preview": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "deploy": "bash scripts/deploy-pages.sh",
     "analyze": "node --experimental-strip-types tools/analyze-wav.ts"
   },
   "dependencies": {
