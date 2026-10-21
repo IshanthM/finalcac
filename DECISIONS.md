@@ -46,3 +46,10 @@
   Load sequence plays once: island drops in, headline rises line by line, orb rings bloom outward. Desktop-only cursor spotlight on bezel borders
   (one delegated pointer listener, no scroll listeners). Dashboard numbers count up. Store code copies with an icon morph. All of it collapses
   under `prefers-reduced-motion`; nothing animates continuously (see D19).
+- **D22 Design v3: measurement-instrument language (replaces D18's bezel/orb look).** Feedback: too big, too generic, too many bubbles.
+  Dropped: nested glass bezels, pill buttons, circular icon holders, the glowing orb, the floating nav pill. Added: flat hairline panels with
+  crop-mark corners; rectangular **bracket buttons** (corner brackets at rest that grow into a full outline on hover; primary is a solid tan block);
+  an editorial index list for roles and a spec sheet for status, under hairline section rules with a mono label rail; square status tags;
+  a slim top bar with a five-bar fading-ring mark. Signature visuals come from the product: the tag's ring as a decaying waveform on a scope
+  (home, alert) and a live 8 to 16 kHz spectrum line with the calibrated band marked (listener). Smaller type (display 60px max, h1 38px),
+  48px controls. Body text stays 18px; mono labels are 14px (they are labels, not body). The live trace redraws at ~16 fps and pauses when hidden.

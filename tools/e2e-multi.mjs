@@ -17,15 +17,15 @@ const st = (role, extra = {}, withProfile = true) => ({
 // Staff console
 const con = await open(`${base}#/console`, null, { storage: st('staff') });
 await con.page.getByRole('button', { name: 'Enable alerts' }).click();
-await con.page.waitForFunction(() => /Connected/.test(document.body.innerText), null, { timeout: 8000 });
+await con.page.waitForFunction(() => /connected/i.test(document.body.innerText), null, { timeout: 8000 });
 check('console shows the store code', (await con.page.innerText('.code-big')).trim() === code);
 
 // Listener A: Fitting Room 2, online, hears a ring
 const A = await open(`${base}#/listener`, '.scratch/single.wav', { storage: st('listener', { zone: { name: 'Fitting Room 2', type: 'fitting' } }) });
-await A.page.waitForFunction(() => /connected/.test(document.body.innerText), null, { timeout: 8000 });
+await A.page.waitForFunction(() => /connected/i.test(document.body.innerText), null, { timeout: 8000 });
 await sleep(500);
 const zonesText = await con.page.innerText('.zones');
-check('console sees the listener zone online', /Fitting Room 2/i.test(zonesText) && /Listening/.test(zonesText), zonesText);
+check('console sees the listener zone online', /Fitting Room 2/i.test(zonesText) && /listening/i.test(zonesText), zonesText);
 const chipA = (await A.page.innerText('.chip')).trim();
 check('listener knows a console is online', !/no staff console/.test(chipA), chipA);
 await A.page.getByRole('button', { name: 'Start listening' }).click();
@@ -40,11 +40,11 @@ await con.page.getByRole('button', { name: /Acknowledge tamper/ }).click();
 await con.page.waitForSelector('[role=alertdialog]', { state: 'detached', timeout: 4000 });
 await sleep(500);
 const rows = await con.page.innerText('ul.log');
-check('console log shows the tamper as acknowledged', /Tamper, acknowledged/.test(rows), rows.replace(/\n/g, ' | '));
+check('console log shows the tamper as acknowledged', /Tamper, acknowledged/i.test(rows), rows.replace(/\n/g, ' | '));
 const dash = await open(`${base}dashboard.html?store=${code}`, null, { storage: { 'resonance.relay': relay } });
 await dash.page.waitForSelector('.stats', { timeout: 8000 });
 const dtxt = await dash.page.innerText('main');
-check('dashboard counts the alert and shows the zone', /1\s*Tamper alerts/.test(dtxt) && /Fitting Room 2/i.test(dtxt), dtxt.replace(/\n/g, ' | ').slice(0, 300));
+check('dashboard counts the alert and shows the zone', /1\s*Tamper alerts/i.test(dtxt) && /Fitting Room 2/i.test(dtxt), dtxt.replace(/\n/g, ' | ').slice(0, 300));
 await dash.page.screenshot({ path: '.scratch/dashboard.png', fullPage: true });
 check('profile was shared to the store by the listener', /13,287 Hz/.test(dtxt));
 

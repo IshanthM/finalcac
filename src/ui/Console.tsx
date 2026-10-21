@@ -17,7 +17,7 @@ const FRESH_MS = 2 * 60 * 1000;
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
 
 function ZoneMap({ zones, alarming }: { zones: ZoneInfo[]; alarming: Set<string> }) {
-  if (zones.length === 0) return <div class="empty"><span class="tile-ico"><Icon name="mic" /></span><strong>No listeners yet</strong><span>On another phone, choose Listener and enter this store's code.</span></div>;
+  if (zones.length === 0) return <div class="empty"><Icon name="mic" /><strong>No listeners yet</strong><span>On another phone, choose Listener and enter this store's code.</span></div>;
   return (
     <ul class="zones" aria-label="Zones">
       {zones.map((z) => {

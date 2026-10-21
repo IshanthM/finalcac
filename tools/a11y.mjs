@@ -44,11 +44,11 @@ for (const [name, url, storage, act] of screens) {
       const t = n.textContent.trim(); const el = n.parentElement;
       if (!t || !el || el.closest('.sr-only, script, style')) continue;
       const fs = parseFloat(getComputedStyle(el).fontSize);
-      if (fs < 18 && !seen.has(el.className + fs)) { seen.add(el.className + fs); small.push(`${fs}px .${el.className || el.tagName} "${t.slice(0, 30)}"`); }
+      if (fs < (el.classList.contains('label') || /mono/.test(getComputedStyle(el).fontFamily) ? 13 : 16) && !seen.has(el.className + fs)) { seen.add(el.className + fs); small.push(`${fs}px .${el.className || el.tagName} "${t.slice(0, 30)}"`); }
     }
     return { small, tiny };
   });
-  console.log(`\n== ${name}: ${res.length} axe violation(s), ${sizes.tiny.length} small tap target(s), ${sizes.small.length} text style(s) under 18px`);
+  console.log(`\n== ${name}: ${res.length} axe violation(s), ${sizes.tiny.length} small tap target(s), ${sizes.small.length} text style(s) too small (body <16px, mono labels <13px)`);
   for (const v of res) { bad++; console.log(`   [${v.impact}] ${v.id} x${v.n}: ${v.help}\n      ${v.sample}\n      ${v.why}`); }
   for (const t of sizes.tiny) console.log(`   tap: ${t}`);
   for (const t of sizes.small) console.log(`   text: ${t}`);

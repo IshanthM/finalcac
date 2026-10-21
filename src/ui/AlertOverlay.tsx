@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { acknowledge, useAlarms } from '../alert/alarm.ts';
 import { ackIncident } from '../hub/incidents.ts';
+import { RingTrace } from './Trace.tsx';
 
 /** Full-screen red alert for the newest unacknowledged tamper; every alert is also spoken and has a siren. */
 export function AlertOverlay({ onAck }: { onAck?: (id: string) => void }) {
@@ -21,6 +22,7 @@ export function AlertOverlay({ onAck }: { onAck?: (id: string) => void }) {
       </div>
       {top && (
         <div class="alert" role="alertdialog" aria-modal="true" aria-labelledby="alert-title" aria-describedby="alert-desc">
+          <div class="alert-wave" aria-hidden="true"><RingTrace bare /></div>
           <p class="alert-kicker">{top.test ? 'Test tamper' : 'Tamper'}</p>
           <h1 id="alert-title" class="alert-zone">{top.zone}</h1>
           <p id="alert-desc" class="alert-meta">{new Date(top.at).toLocaleTimeString()}, SNR {top.snrDb.toFixed(0)} dB</p>

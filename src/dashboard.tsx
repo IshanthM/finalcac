@@ -46,7 +46,7 @@ function ZoneBars({ items }: { items: Incident[] }) {
   for (const i of items) if (i.kind === 'tamper' && !i.test) counts.set(i.zone, (counts.get(i.zone) ?? 0) + 1);
   const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
   if (rows.length === 0) {
-    return <div class="empty"><span class="tile-ico"><Icon name="chart" /></span><strong>No tamper events yet</strong><span>Zones with alerts are ranked here.</span></div>;
+    return <div class="empty"><Icon name="chart" /><strong>No tamper events yet</strong><span>Zones with alerts are ranked here.</span></div>;
   }
   const max = Math.max(...rows.map((r) => r[1]));
   return (
@@ -118,23 +118,25 @@ function Dashboard() {
         </Reveal>
         {err && <p class="error" role="alert">{err}</p>}
         {!CODE_RE.test(code) && <p class="lede">Enter the store code shown on the staff console to see its events.</p>}
-        {CODE_RE.test(code) && !data && !err && <div class="bento"><div class="skel span-2" /><div class="skel span-2" /><div class="skel span-2" /></div>}
+        {CODE_RE.test(code) && !data && !err && <div class="stats-row"><div class="skel" /><div class="skel" /><div class="skel" /></div>}
 
         {data && (
           <>
             <p class="muted" aria-live="polite">Store <span class="mono">{code}</span>, updated <span class="mono">{new Date(updated).toLocaleTimeString()}</span></p>
-            <div class="bento stats">
-              <Reveal class="span-2 row-2"><Bezel tone="blue" class="stat-big"><span class="stat-n"><Count n={tampers.length} /></span><span class="stat-l">Tamper alerts</span></Bezel></Reveal>
-              <Reveal i={1} class="span-2"><Bezel><span class={`stat-n ${open.length ? 'redn' : ''}`}><Count n={open.length} /></span><span class="stat-l">Open alerts</span></Bezel></Reveal>
-              <Reveal i={2} class="span-2"><Bezel><span class="stat-n">{ack === null ? 'n/a' : <Count n={ack} d={1} />}{ack !== null && <small>s</small>}</span><span class="stat-l">Median time to acknowledge</span></Bezel></Reveal>
-              <Reveal i={1} class="span-2"><Bezel tone="amber"><span class="stat-n"><Count n={checkouts.length} /></span><span class="stat-l">Checkouts</span></Bezel></Reveal>
-              <Reveal i={2} class="span-2"><Bezel><span class="stat-n"><Count n={online} /><small>of {data.zones.length}</small></span><span class="stat-l">Zones online</span></Bezel></Reveal>
-            </div>
+            <Reveal>
+              <div class="stats-row stats">
+                <div class="stat"><span class="stat-n"><Count n={tampers.length} /></span><span class="stat-l">Tamper alerts</span></div>
+                <div class="stat"><span class={`stat-n ${open.length ? 'redn' : ''}`}><Count n={open.length} /></span><span class="stat-l">Open alerts</span></div>
+                <div class="stat"><span class="stat-n">{ack === null ? 'n/a' : <Count n={ack} d={1} />}{ack !== null && <small>s</small>}</span><span class="stat-l">Median time to acknowledge</span></div>
+                <div class="stat"><span class="stat-n"><Count n={checkouts.length} /></span><span class="stat-l">Checkouts</span></div>
+                <div class="stat"><span class="stat-n"><Count n={online} /><small>of {data.zones.length}</small></span><span class="stat-l">Zones online</span></div>
+              </div>
+            </Reveal>
 
             <div class="cols two even" style={{ marginTop: '8px' }}>
               <div>
                 <Reveal as="h2">Tamper alerts by zone</Reveal>
-                <Reveal i={1}><Bezel><ZoneBars items={data.incidents} /></Bezel></Reveal>
+                <Reveal i={1}><ZoneBars items={data.incidents} /></Reveal>
                 <Reveal as="h2">Zones</Reveal>
                 <Reveal i={1}>
                   <Bezel>

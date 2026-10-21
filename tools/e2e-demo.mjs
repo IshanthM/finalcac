@@ -32,7 +32,7 @@ await run({ name: 'Fitting Room 2', type: 'fitting' }, async ({ page }) => {
   await page.getByRole('button', { name: /Acknowledge tamper/ }).click();
   await page.waitForSelector('[role=alertdialog]', { state: 'detached', timeout: 3000 });
   const log = await page.innerText('ul.log');
-  check('acknowledged and logged', /Tamper, acknowledged/.test(log) && /Fitting Room 2/i.test(log), log.replace(/\n/g, ' | '));
+  check('acknowledged and logged', /Tamper, acknowledged/i.test(log) && /Fitting Room 2/i.test(log), log.replace(/\n/g, ' | '));
 });
 
 await run({ name: 'Register 1', type: 'register' }, async ({ page }) => {
@@ -40,7 +40,7 @@ await run({ name: 'Register 1', type: 'register' }, async ({ page }) => {
   await page.waitForSelector('ul.log li', { timeout: 20000 });
   await page.waitForTimeout(500);
   const log = await page.innerText('ul.log');
-  check('register zone logs Checkout quietly', /Checkout/.test(log) && !/Tamper/.test(log), log.replace(/\n/g, ' | '));
+  check('register zone logs Checkout quietly', /Checkout/i.test(log) && !/Tamper/i.test(log), log.replace(/\n/g, ' | '));
   check('no alarm overlay for a checkout', (await page.locator('[role=alertdialog]').count()) === 0);
 });
 

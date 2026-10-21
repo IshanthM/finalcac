@@ -5,7 +5,7 @@ export function EventLog({ items }: { items: Incident[] }) {
   if (items.length === 0) {
     return (
       <div class="empty">
-        <span class="tile-ico"><Icon name="bell" /></span>
+        <Icon name="bell" />
         <strong>No events yet</strong>
         <span>When a tag rings, it appears here with the zone and time.</span>
       </div>
