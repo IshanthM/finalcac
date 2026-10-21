@@ -32,7 +32,7 @@ export function UseCases() {
       {CASES.map((c) => (
         <Bezel key={c.title} tone={c.tone}>
           <div class="case-art"><Plan hi={c.hi} /></div>
-          <div class="case-head"><h3>{c.title}</h3><span class="pill">{c.tag}</span></div>
+          <div class="case-head"><h2 class="sub" style={{ margin: 0 }}>{c.title}</h2><span class="pill">{c.tag}</span></div>
           <p class="muted">{c.text}</p>
         </Bezel>
       ))}

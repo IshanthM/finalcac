@@ -68,7 +68,7 @@ export function Stages() {
         {STAGES.map(({ Mini, title, text }, i) => (
           <Bezel key={title} class="stage" style={{ '--n': i }} tone={i === 3 ? 'amber' : i === 0 ? 'blue' : ''}>
             <div class="stage-art"><Mini /></div>
-            <h3>{title}</h3>
+            <h2 class="sub">{title}</h2>
             <p class="muted">{text}</p>
           </Bezel>
         ))}

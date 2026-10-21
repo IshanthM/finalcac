@@ -73,3 +73,9 @@
 - **D26 Audio rate guard (found while testing).** A Bluetooth output device made the browser default to 24 kHz audio, which cannot carry a 13.3 kHz tone, so
   rings were silently mis-measured. The engine now requests a 48 kHz context and refuses to start (with a plain message) if the audio rate or the mic's
   reported rate is below 32 kHz. The test rig also uses 48 kHz contexts now.
+- **D27 Design v5: familiar app conventions (replaces v3/v4 look).** Feedback: the experimental look was not liked; take inspiration from popular apps.
+  Borrowed *patterns* (not anyone's artwork): bottom tab bar (sidebar on desktop) with an alerts badge, large screen titles, inset grouped lists with
+  icon tiles (settings style), a tile grid where active zones light up (smart-home style), a notification-style alerts feed, bottom sheets for zone and role,
+  segmented control, and a swipeable first-run welcome. Kept: deck palette and Poppins, the 3D tag model and stage diagrams (welcome and About), and the
+  judge-facing story, now under Settings > How it works. Engineering: role logic moved out of screens into `src/runtime.ts` (demo hub, listener relay + offline
+  queue + local alarm, staff console) so tabs can switch without dropping the connection. Models/diagrams CSS lives in `src/models.css`.

@@ -8,6 +8,7 @@ import '@fontsource/poppins/latin-700.css';
 import '@fontsource/geist-mono/latin-400.css';
 import '@fontsource/geist-mono/latin-500.css';
 import './style.css';
+import './models.css';
 import type { ZoneInfo } from '../worker/src/protocol.ts';
 import type { Incident } from './dsp/dedupe.ts';
 import { toleranceFrac, parseProfile, type TagProfile } from './dsp/profile.ts';
@@ -15,9 +16,7 @@ import { CODE_RE, normalizeCode, relayBase } from './net/config.ts';
 import { Bezel } from './ui/Bezel.tsx';
 import { EventLog } from './ui/EventLog.tsx';
 import { Icon } from './ui/Icon.tsx';
-import { Island } from './ui/Island.tsx';
 import { Reveal } from './ui/Reveal.tsx';
-import './ui/spotlight.ts';
 
 /** Counts up to `n` once (ease-out, 0.9 s); static under reduced motion. */
 function Count({ n, d = 0 }: { n: number; d?: number }) {
@@ -105,9 +104,8 @@ function Dashboard() {
 
   return (
     <>
-      <Island backHref={import.meta.env.BASE_URL} />
-      <main class="page wide">
-        <Reveal as="h1">Store events</Reveal>
+      <main class="content" style={{ maxWidth: "980px", margin: "0 auto" }}>
+        <header class="screen-head"><div><h1 class="large">Store events</h1><p class="sub">Live from the relay, updated every few seconds</p></div><a class="btn btn-tint" href={import.meta.env.BASE_URL}>Back to the app</a></header>
         <Reveal i={1}>
           <form class="inline" onSubmit={(e) => { e.preventDefault(); if (CODE_RE.test(input)) { setCode(input); history.replaceState(null, '', `?store=${input}`); } }}>
             <label class="sr-only" for="sc">Store code</label>
@@ -133,11 +131,11 @@ function Dashboard() {
               </div>
             </Reveal>
 
-            <div class="cols two even" style={{ marginTop: '8px' }}>
+            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', marginTop: '8px' }}>
               <div>
-                <Reveal as="h2">Tamper alerts by zone</Reveal>
+                <p class="sect">Tamper alerts by zone</p>
                 <Reveal i={1}><ZoneBars items={data.incidents} /></Reveal>
-                <Reveal as="h2">Zones</Reveal>
+                <p class="sect">Zones</p>
                 <Reveal i={1}>
                   <Bezel>
                     <table class="dtable" aria-label="Zones">
@@ -148,7 +146,7 @@ function Dashboard() {
                     </table>
                   </Bezel>
                 </Reveal>
-                <Reveal as="h2">Tag profile</Reveal>
+                <p class="sect">Tag profile</p>
                 <Reveal i={1}>
                   <Bezel tone="tan">
                     {data.profile
@@ -158,7 +156,7 @@ function Dashboard() {
                 </Reveal>
               </div>
               <div>
-                <Reveal as="h2">Event log</Reveal>
+                <p class="sect">Event log</p>
                 <Reveal i={1}><EventLog items={data.incidents} /></Reveal>
               </div>
             </div>

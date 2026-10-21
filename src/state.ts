@@ -17,10 +17,12 @@ export interface AppState {
   storeCode: string | null;
   zone: Zone | null;
   profile: TagProfile | null;
+  /** True once the first-run welcome has been seen or skipped. */
+  welcomed: boolean;
 }
 
 const KEY = 'resonance.state.v1';
-const EMPTY: AppState = { role: null, storeCode: null, zone: null, profile: null };
+const EMPTY: AppState = { role: null, storeCode: null, zone: null, profile: null, welcomed: false };
 
 function load(): AppState {
   try {
@@ -33,6 +35,7 @@ function load(): AppState {
       storeCode: typeof raw.storeCode === 'string' && /^[A-Z0-9]{6}$/.test(raw.storeCode) ? raw.storeCode : null,
       zone,
       profile: parseProfile(raw.profile),
+      welcomed: raw.welcomed === true,
     };
   } catch {
     return { ...EMPTY };

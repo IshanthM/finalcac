@@ -18,11 +18,16 @@ import storefront from '@phosphor-icons/core/assets/light/storefront-light.svg?r
 import waveform from '@phosphor-icons/core/assets/light/waveform-light.svg?raw';
 import wifiSlash from '@phosphor-icons/core/assets/light/wifi-slash-light.svg?raw';
 import copy from '@phosphor-icons/core/assets/light/copy-light.svg?raw';
+import house from '@phosphor-icons/core/assets/light/house-simple-light.svg?raw';
+import gear from '@phosphor-icons/core/assets/light/gear-six-light.svg?raw';
+import squares from '@phosphor-icons/core/assets/light/squares-four-light.svg?raw';
+import chevron from '@phosphor-icons/core/assets/light/caret-right-light.svg?raw';
+import info from '@phosphor-icons/core/assets/light/info-light.svg?raw';
 import user from '@phosphor-icons/core/assets/light/user-light.svg?raw';
 
 const ICONS = {
   arrow: arrowUpRight, next: arrowRight, bell, broadcast, bug, chart, check, clock, back: caretLeft, lock, pin: mapPin, mic, play,
-  shield, tune: sliders, store: storefront, wave: waveform, offline: wifiSlash, user, copy,
+  shield, tune: sliders, store: storefront, wave: waveform, offline: wifiSlash, user, copy, house, gear, squares, chevron, info,
 } as const;
 
 export type IconName = keyof typeof ICONS;

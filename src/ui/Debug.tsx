@@ -85,8 +85,8 @@ export function Debug() {
 
   const last = e.events[0];
   return (
-    <main class="page">
-      <h1>Debug recorder</h1>
+    <main class="content screen">
+      <header class="screen-head"><div><h1 class="large">Debug recorder</h1></div><a class="btn btn-tint" href={import.meta.env.BASE_URL}>Back to the app</a></header>
       <div class="actions">
         {!running && state !== 'suspended' && (
           <button class="btn btn-primary" onClick={start} disabled={state === 'starting'}>

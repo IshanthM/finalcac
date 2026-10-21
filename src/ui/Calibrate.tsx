@@ -8,8 +8,7 @@ import { PARAMS } from '../dsp/params.ts';
 import { pushProfile } from '../net/session.ts';
 import { getState, goBack, setState } from '../state.ts';
 import { Icon } from './Icon.tsx';
-import { Bezel } from './Bezel.tsx';
-import { Reveal } from './Reveal.tsx';
+import { Head } from './app/parts.tsx';
 import { useEngine } from './useEngine.ts';
 
 const hz = (v: number): string => Math.round(v).toLocaleString('en-US');
@@ -70,81 +69,73 @@ export function Calibrate() {
 
   const p = getState().profile;
   return (
-    <main class="page">
-      <Reveal as="h1">Calibrate tag</Reveal>
-      <Reveal i={1} as="p" class="lede">Ring the tag {PARAMS.calibRings} separate times and re-arm it between rings. Use different tags to cover tag-to-tag spread.</Reveal>
-      <div class="cols two even">
-        <div>
-          {!running && (
-            <div class="actions" style={{ marginTop: 0 }}>
-              <button class="btn btn-primary" onClick={start} disabled={e.info.state === 'starting'}>Start listening</button>
-            </div>
-          )}
-          {e.info.error && <p class="error" role="alert">Mic error: {e.info.error}</p>}
-          <Reveal i={1}>
-            <ol class="rings" aria-label="Calibration rings">
-              {rings.map((r, i) => (
-                <li key={i} class={`ring ${r ? 'done' : i === next ? 'current' : ''}`} aria-current={i === next ? 'step' : undefined}>
-                  <span class="ring-dot" aria-hidden="true">{r ? <Icon name="check" /> : i + 1}</span>
-                  <span class="ring-n">Ring {i + 1}</span>
-                  <span class="ring-v">{r ? `${hz(r.freqHz)} Hz` : i === next ? (running ? 'listening' : 'waiting') : 'Not yet'}</span>
+    <div class="screen">
+      <Head title="Calibrate tag" sub={`Ring the tag ${PARAMS.calibRings} separate times and re-arm it between rings. Use different tags to cover tag-to-tag spread.`} back />
+      {!running && (
+        <div class="actions" style={{ marginTop: 0 }}>
+          <button class="btn btn-primary btn-block" onClick={start} disabled={e.info.state === 'starting'}>Start listening</button>
+        </div>
+      )}
+      {e.info.error && <p class="error" role="alert">{e.info.error}</p>}
+
+      <ol class="group rings" aria-label="Calibration rings" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {rings.map((r, i) => (
+          <li key={i} class={`row ring ${r ? 'done' : i === next ? 'current' : ''}`} aria-current={i === next ? 'step' : undefined}>
+            <span class="ring-dot" aria-hidden="true">{r ? <Icon name="check" /> : i + 1}</span>
+            <span class="row-main"><span class="ring-n row-title">Ring {i + 1}</span></span>
+            <span class="ring-v row-val mono">{r ? `${hz(r.freqHz)} Hz` : i === next ? (running ? 'listening' : 'waiting') : 'Not yet'}</span>
+          </li>
+        ))}
+      </ol>
+      <p role="status" aria-live="polite" class="note" style={{ marginTop: '14px' }}>{note || (running && next >= 0 ? `Ring ${next + 1} of ${rings.length}: ring the tag now.` : '')}</p>
+
+      <p class="sect">Ring agreement</p>
+      <div class="card"><div class="bz-in">
+        <p class="muted">Every ring must land inside the band around the median.</p>
+        <AgreementStrip rings={rings} />
+        {rings.filter(Boolean).length < 2 && <p class="muted">The strip fills in as you ring.</p>}
+      </div></div>
+
+      {status.kind === 'disagree' && (
+        <>
+          <p class="sect">The rings don't agree</p>
+          <div class="card" aria-label="Rings that disagree"><div class="bz-in">
+            <p>All {PARAMS.calibRings} must be within {(PARAMS.calibAgreeFrac * 100).toFixed(1)}% of the median (<span class="mono">{hz(status.median)} Hz</span>).</p>
+            <ul class="list">
+              {status.offenders.map((o) => (
+                <li class="group row" key={o.index} style={{ justifyContent: 'space-between' }}>
+                  <span>{o.message}</span>
+                  <button class="btn btn-tint" aria-label={`Redo ring ${o.index + 1}`} onClick={() => redo(o.index)}>Redo ring {o.index + 1}</button>
                 </li>
               ))}
-            </ol>
-          </Reveal>
-          <p role="status" aria-live="polite" class="note" style={{ marginTop: '18px' }}>{note || (running && next >= 0 ? `Ring ${next + 1} of ${rings.length}: ring the tag now.` : '')}</p>
-          {status.kind !== 'ok' && <div class="actions" style={{ marginTop: 0 }}><button class="btn btn-quiet" onClick={reset}>Start over</button></div>}
-        </div>
+            </ul>
+          </div></div>
+        </>
+      )}
 
-        <div class="stack">
-          <Reveal i={2}>
-            <Bezel tone="tan">
-              <h2 class="sub">Ring agreement</h2>
-              <p class="muted">Every ring must land inside the band around the median.</p>
-              <AgreementStrip rings={rings} />
-              {rings.filter(Boolean).length < 2 && <p class="muted">The strip fills in as you ring.</p>}
-            </Bezel>
-          </Reveal>
+      {status.kind === 'ok' && (
+        <>
+          <p class="sect">All {PARAMS.calibRings} rings agree</p>
+          <div class="card" aria-label="Calibration result"><div class="bz-in">
+            <dl class="kv">
+              <dt>Tag frequency</dt><dd>{hz(status.profile.freqHz)} Hz</dd>
+              <dt>Spread</dt><dd>±{(status.profile.spreadFrac * 100).toFixed(2)}%</dd>
+              <dt>Accepts</dt><dd>±{(toleranceFrac(status.profile.spreadFrac) * 100).toFixed(2)}% ({hz(status.profile.freqHz * (1 - toleranceFrac(status.profile.spreadFrac)))} to {hz(status.profile.freqHz * (1 + toleranceFrac(status.profile.spreadFrac)))} Hz)</dd>
+              <dt>Decay τ</dt><dd>{status.profile.decayMs.toFixed(1)} ms</dd>
+            </dl>
+            <div class="actions">
+              {!saved
+                ? <button class="btn btn-primary" onClick={save}>Save as store tag profile</button>
+                : <button class="btn btn-primary" onClick={() => goBack()}>Saved. Go back</button>}
+              <button class="btn btn-plain" onClick={reset}>Start over</button>
+            </div>
+          </div></div>
+        </>
+      )}
 
-          {status.kind === 'disagree' && (
-            <Bezel tone="amber" aria-label="Rings that disagree">
-              <h2 class="warn">The rings don't agree</h2>
-              <p>All {PARAMS.calibRings} must be within {(PARAMS.calibAgreeFrac * 100).toFixed(1)}% of the median (<span class="mono">{hz(status.median)} Hz</span>).</p>
-              <ul class="list">
-                {status.offenders.map((o) => (
-                  <li class="row" key={o.index}>
-                    <span style={{ fontFamily: 'var(--font)', color: 'var(--text)' }}>{o.message}</span>
-                    <button class="btn" aria-label={`Redo ring ${o.index + 1}`} onClick={() => redo(o.index)}>Redo ring {o.index + 1}</button>
-                  </li>
-                ))}
-              </ul>
-            </Bezel>
-          )}
-
-          {status.kind === 'ok' && (
-            <Bezel tone="blue" aria-label="Calibration result">
-              <h2>All {PARAMS.calibRings} rings agree</h2>
-              <dl class="kv">
-                <dt>Tag frequency</dt><dd>{hz(status.profile.freqHz)} Hz</dd>
-                <dt>Spread</dt><dd>±{(status.profile.spreadFrac * 100).toFixed(2)}%</dd>
-                <dt>Accepts</dt><dd>±{(toleranceFrac(status.profile.spreadFrac) * 100).toFixed(2)}% ({hz(status.profile.freqHz * (1 - toleranceFrac(status.profile.spreadFrac)))} to {hz(status.profile.freqHz * (1 + toleranceFrac(status.profile.spreadFrac)))} Hz)</dd>
-                <dt>Decay τ</dt><dd>{status.profile.decayMs.toFixed(1)} ms</dd>
-              </dl>
-              <div class="actions">
-                {!saved
-                  ? <button class="btn btn-primary" onClick={save}>Save as store tag profile</button>
-                  : <button class="btn btn-primary" onClick={() => goBack()}>Saved. Go back</button>}
-                <button class="btn btn-quiet" onClick={reset}>Start over</button>
-              </div>
-            </Bezel>
-          )}
-
-          {p && status.kind !== 'ok' && (
-            <p class="muted">Current profile: <span class="mono">{hz(p.freqHz)} Hz ±{(toleranceFrac(p.spreadFrac) * 100).toFixed(2)}%</span>. Finishing a new calibration replaces it.</p>
-          )}
-        </div>
-      </div>
-    </main>
+      {p && status.kind !== 'ok' && <p class="muted" style={{ marginTop: '14px' }}>Current profile: <span class="mono">{hz(p.freqHz)} Hz ±{(toleranceFrac(p.spreadFrac) * 100).toFixed(2)}%</span>. Finishing a new calibration replaces it.</p>}
+      {status.kind !== 'ok' && <div class="actions"><button class="btn btn-plain" onClick={reset}>Start over</button></div>}
+    </div>
   );
 }
 

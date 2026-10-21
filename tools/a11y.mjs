@@ -7,18 +7,23 @@ const axeSrc = readFileSync('node_modules/axe-core/axe.min.js', 'utf8');
 const profile = { freqHz: 13300, spreadFrac: 0.002, decayMs: 8, sampleRate: 48000, calibratedAt: '2026-10-20T00:00:00Z', rings: [] };
 const { code } = await (await fetch(`${relay}/api/stores`, { method: 'POST' })).json();
 const zone = { name: 'Fitting Room 2', type: 'fitting' };
-const state = (o) => ({ 'resonance.state.v1': JSON.stringify({ role: null, storeCode: code, zone: null, profile, ...o }), 'resonance.relay': relay });
+const state = (o) => ({ 'resonance.state.v1': JSON.stringify({ role: null, storeCode: code, zone: null, profile, welcomed: true, ...o }), 'resonance.relay': relay });
+const sim = async (p) => { await p.getByRole('button', { name: 'Simulate a tag ring' }).click(); await p.waitForSelector('[role=alertdialog]'); };
 
 const screens = [
-  ['home', `${base}`, state({}), null],
-  ['join (listener)', `${base}#/join/listener`, state({ storeCode: null }), null],
-  ['listener zone setup', `${base}#/listener`, state({ role: 'listener' }), null],
-  ['listener', `${base}#/listener`, state({ role: 'listener', zone }), null],
-  ['console', `${base}#/console`, state({ role: 'staff' }), null],
-  ['calibrate', `${base}#/calibrate`, state({}), null],
-  ['demo', `${base}#/demo`, state({ role: 'demo', zone }), null],
-  ['demo alert', `${base}#/demo`, state({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Simulate two phones hearing it' }).click(); await p.waitForSelector('[role=alertdialog]'); }],
-  ['demo alert (acked, log)', `${base}#/demo`, state({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Simulate a tag ring' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.getByRole('button', { name: /Acknowledge/ }).click(); await p.waitForTimeout(300); }],
+  ['welcome', `${base}`, state({ welcomed: false }), null],
+  ['choose role', `${base}`, state({}), null],
+  ['home (demo)', `${base}`, state({ role: 'demo', zone }), null],
+  ['home (listener)', `${base}`, state({ role: 'listener', zone }), null],
+  ['home (staff)', `${base}`, state({ role: 'staff' }), null],
+  ['demo alert', `${base}`, state({ role: 'demo', zone }), sim],
+  ['alerts (with items)', `${base}`, state({ role: 'demo', zone }), async (p) => { await sim(p); await p.locator('.btn-ack').click(); await p.getByRole('link', { name: /Alerts/ }).click(); await p.waitForTimeout(400); }],
+  ['zones', `${base}#/zones`, state({ role: 'demo', zone }), null],
+  ['settings', `${base}#/settings`, state({ role: 'demo', zone }), null],
+  ['about', `${base}#/about`, state({}), null],
+  ['calibrate', `${base}#/calibrate`, state({ role: 'demo', zone }), null],
+  ['join', `${base}#/join/listener`, state({}), null],
+  ['zone sheet', `${base}#/settings`, state({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: /Zone/ }).first().click(); await p.waitForSelector('[role=dialog]'); }],
   ['dashboard', `${base}dashboard.html?store=${code}`, state({}), async (p) => { await p.waitForSelector('.stats'); }],
   ['debug', `${base}?debug=1`, state({}), null],
 ];
