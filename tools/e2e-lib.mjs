@@ -12,7 +12,7 @@ export async function open(url, wavPath, { viewport = { width: 390, height: 844 
     await ctx.route('**/__fake.wav', (r) => r.fulfill({ body: wav, contentType: 'audio/wav' }));
     await ctx.addInitScript(() => {
       navigator.mediaDevices.getUserMedia = async () => {
-        const ac = new AudioContext();
+        const ac = new AudioContext({ sampleRate: 48000 });
         const buf = await ac.decodeAudioData(await (await fetch('/__fake.wav')).arrayBuffer());
         const src = ac.createBufferSource();
         src.buffer = buf; src.loop = true;

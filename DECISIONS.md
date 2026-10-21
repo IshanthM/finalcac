@@ -65,3 +65,11 @@
   when scrolled into view or on "Replay". Motion patterns used (draw, pulse, sequence, scrub, spring physics) are generic techniques, written from
   scratch; the connector line is scrubbed by scroll via CSS `animation-timeline: view()` where supported, static elsewhere. The spring is a CSS
   `linear()` easing. No third-party clips, templates, markup or copy were reproduced. Everything collapses under `prefers-reduced-motion`.
+- **D25 Reference study via Firecrawl (analysis only).** Scraped 60fps.design (glossary, motion, snippets) and the public preview of a paid Framer template,
+  into the gitignored `.firecrawl/` folder. Used for: motion guidance (sequence = deliberate order with even intervals and subtle easing; reveal = pacing;
+  pulse = gentle continuous easing) and the *kinds* of sections launch pages use (two-tone statements, a numbers block with one dominant stat, a spec
+  table with pills, use-case cards, an honest FAQ). Nothing from either site is reproduced: all copy, artwork and code here are original, with Resonance's
+  real content (zone types, tag hardware, detection thresholds). The scraped files stay out of git.
+- **D26 Audio rate guard (found while testing).** A Bluetooth output device made the browser default to 24 kHz audio, which cannot carry a 13.3 kHz tone, so
+  rings were silently mis-measured. The engine now requests a 48 kHz context and refuses to start (with a plain message) if the audio rate or the mic's
+  reported rate is below 32 kHz. The test rig also uses 48 kHz contexts now.

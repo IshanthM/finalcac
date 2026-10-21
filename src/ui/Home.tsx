@@ -3,11 +3,13 @@ import { chime } from '../alert/siren.ts';
 import { unlockOutputs } from '../alert/unlock.ts';
 import { getState, go, setState, useAppState } from '../state.ts';
 import { Bezel } from './Bezel.tsx';
+import { Blueprint } from './Blueprint.tsx';
 import { Icon, type IconName } from './Icon.tsx';
 import { Orb } from './Orb.tsx';
 import { Reveal } from './Reveal.tsx';
 import { Stages } from './Stages.tsx';
 import { TagModel } from './TagModel.tsx';
+import { UseCases } from './UseCases.tsx';
 import { RingTrace } from './Trace.tsx';
 
 const REPO = 'https://github.com/IshanthM/finalcac';
@@ -72,6 +74,16 @@ export function Home() {
       </Reveal>
 
       <Reveal as="section" class="sec">
+        <h2 class="sec-label">Where it works</h2>
+        <UseCases />
+      </Reveal>
+
+      <Reveal as="section" class="sec">
+        <h2 class="sec-label">From tag to alert</h2>
+        <Stages />
+      </Reveal>
+
+      <Reveal as="section" class="sec">
         <h2 class="sec-label">Try it</h2>
         <div class="role-grid">
           <button class="bz tone-blue" onClick={() => go(code ? 'listener' : 'join/listener')}>
@@ -95,20 +107,46 @@ export function Home() {
       </Reveal>
 
       <Reveal as="section" class="sec">
-        <h2 class="sec-label">From tag to alert</h2>
-        <Stages />
+        <h2 class="sec-label">The tag</h2>
+        <div class="hw">
+          <Bezel ticks tone="tan">
+            <Blueprint />
+            <ul class="legend">
+              <li><b>A</b>6 mm aluminum standoff, 46 mm long</li>
+              <li><b>B</b>3D-printed clip, one at each end</li>
+              <li><b>C</b>Tack pin: pulling it makes the bar ring</li>
+            </ul>
+          </Bezel>
+          <div>
+            <div class="pills"><span class="pill">Battery-free</span><span class="pill">Passive</span><span class="pill">Re-arms in seconds</span></div>
+            <dl class="spec">
+              <div><dt>Ring</dt><dd>One clear tone near <strong>13.3 kHz</strong>. Real tags land within a few percent, which is why each store calibrates.</dd></div>
+              <div><dt>Click</dt><dd>Pulling the pin also makes a short broadband click. Detection skips it and listens to the ring that follows.</dd></div>
+              <div><dt>Identity</dt><dd>Every tag is identical. Location comes from which phone heard it, not from the tag.</dd></div>
+              <div><dt>Exit gates</dt><dd>A separate 58 kHz label is still there for the door. Resonance works alongside it.</dd></div>
+            </dl>
+          </div>
+        </div>
       </Reveal>
 
       <Reveal as="section" class="sec">
-        <h2 class="sec-label">Under the hood</h2>
-        <dl class="spec">
-          <div><dt>Detection</dt><dd><strong>Runs on the phone.</strong> A Fourier transform finds one narrow tone, then the way it fades is checked. Noise, clatter and music fail that test.</dd></div>
-          <div><dt>Calibration</dt><dd>Ring the tag five times. All five must agree within 0.5%, and the median becomes the store's profile.</dd></div>
-          <div><dt>Merging</dt><dd>If several phones hear one ring within a second, staff get one alert that names the loudest zone.</dd></div>
-          <div><dt>Privacy</dt><dd><strong>Audio never leaves the phone.</strong> Only a zone name and signal strength are sent, and a listener keeps alerting with no connection.</dd></div>
-          <div><dt>Tested</dt><dd>Over 180 automated tests check detection against synthetic rings, clatter and music, plus browser tests of every flow.</dd></div>
-          <div><dt>Source</dt><dd><a class="btn btn-quiet" href={REPO} target="_blank" rel="noopener">Read the code on GitHub</a></dd></div>
-        </dl>
+        <h2 class="sec-label">How it decides</h2>
+        <div>
+          <p class="statement">Four checks decide every ring. <span>Anything that fails one is ignored.</span></p>
+          <div class="numbers">
+            <Bezel tone="blue" class="feat"><div><span class="stat-n">12<small>dB</small></span><p class="desc">Minimum signal over the background noise before a sound counts as a ring.</p></div><div class="src"><span>Signal check</span><span>Set in code</span></div></Bezel>
+            <Bezel><div><span class="stat-n">0.5<small>%</small></span><p class="desc">How closely all five calibration rings must agree.</p></div><div class="src"><span>Calibration</span><span>Per store</span></div></Bezel>
+            <Bezel><div><span class="stat-n">1<small>s</small></span><p class="desc">Window for merging reports from several phones into one alert.</p></div><div class="src"><span>Merging</span><span>Set in code</span></div></Bezel>
+            <Bezel tone="amber" class="wide"><div><span class="stat-n">4</span><p class="desc">Checks per ring: signal, clean tone, fade-out, and frequency.</p></div><div class="src"><span>Pipeline</span><span>All must pass</span></div></Bezel>
+          </div>
+          <div class="faq">
+            <details><summary>What counts as a tag ring?</summary><div class="ans">A clean tone near the tag's calibrated frequency, at least 12 dB above the background, that fades away within a fraction of a second. A steady beep, a burst of noise, or a chord does not pass.</div></details>
+            <details><summary>How do several phones agree?</summary><div class="ans">Reports that arrive within a second are merged into one alert. The loudest zone is named, and the others are listed as "also heard by".</div></details>
+            <details><summary>Where does the audio go?</summary><div class="ans">Nowhere. Detection runs on the phone. Only a zone name and signal strength go to the store's relay, and a listener with no connection still alerts on its own screen.</div></details>
+            <details><summary>What can it miss?</summary><div class="ans">Very quiet or very short rings can fail the checks, and a tag that was never calibrated will not be accepted. That is why each store calibrates with its own tags first.</div></details>
+            <details><summary>How is it tested?</summary><div class="ans">Over 180 automated tests run detection against synthetic rings, clatter and music, plus browser tests of every flow. <a href={REPO} target="_blank" rel="noopener">The code is public on GitHub.</a></div></details>
+          </div>
+        </div>
       </Reveal>
 
       <Reveal as="section" class="sec">

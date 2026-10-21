@@ -39,6 +39,8 @@ export interface EngineInfo {
   error?: string;
 }
 
+/** The tag rings near 13.3 kHz and we analyse up to 15.5 kHz, so audio must run at 32 kHz or more. */
+const MIN_LISTEN_RATE = 32000;
 const PRE_S = 0.5;
 const ANALYSE_AFTER_S = PARAMS.analyzeAfterMs / 1000;
 const SNAPSHOT_AFTER_S = 1.0;
@@ -103,7 +105,11 @@ export class CaptureEngine {
     this.setInfo({ state: 'starting', error: undefined });
     try {
       const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.ctx = new AC({ latencyHint: 'interactive' });
+      // Ask for 48 kHz: a phone with Bluetooth headphones can otherwise default to 16 to 24 kHz, which cannot carry a 13.3 kHz tone.
+      try { this.ctx = new AC({ latencyHint: 'interactive', sampleRate: 48000 }); } catch { this.ctx = new AC({ latencyHint: 'interactive' }); }
+      if (this.ctx.sampleRate < MIN_LISTEN_RATE) {
+        throw new Error(`Audio is running at ${this.ctx.sampleRate} Hz, too low to hear the tag. Disconnect Bluetooth headphones and try again.`);
+      }
       // Resume inside the tap, before the first await that could lose the gesture.
       const resumed = this.ctx.resume();
       const constraints: MediaTrackConstraints = {
@@ -111,6 +117,10 @@ export class CaptureEngine {
       };
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: constraints });
       await resumed;
+      const micRate = this.stream.getAudioTracks()[0]?.getSettings().sampleRate;
+      if (micRate && micRate < MIN_LISTEN_RATE) {
+        throw new Error(`This microphone only captures at ${micRate} Hz, too low to hear the tag. Switch to the phone's built-in microphone.`);
+      }
       await this.ctx.audioWorklet.addModule(workletUrl);
       const sr = this.ctx.sampleRate;
       this.ring = new RingBuffer(sr);
@@ -126,7 +136,7 @@ export class CaptureEngine {
       this.stream.getAudioTracks()[0]?.addEventListener('ended', () => this.setInfo({ state: 'suspended' }));
       this.syncInfo('running');
     } catch (err) {
-      this.setInfo({ state: 'error', error: err instanceof Error ? `${err.name}: ${err.message}` : String(err) });
+      this.setInfo({ state: 'error', error: err instanceof Error ? (err.name === 'Error' ? err.message : `${err.name}: ${err.message}`) : String(err) });
       this.teardown();
     }
   }

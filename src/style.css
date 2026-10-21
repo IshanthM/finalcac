@@ -556,3 +556,62 @@ button.bz:focus-visible { outline: 2px solid var(--tan); outline-offset: 3px; }
   .stages[data-run] .banner-m { opacity: 1; } .stages[data-run] .pin-m { transform: translate(8px, -22px) rotate(18deg); }
   .stages::before { animation: none; }
 }
+
+
+/* =====================================================================================================
+   Content patterns (original): two-tone statement, numbers block with a dominant stat, spec table with pills, use-case cards,
+   and an honest "how it decides" accordion. Structure inspired by common launch-page patterns; all content and artwork are ours.
+   ===================================================================================================== */
+.statement { font: 300 clamp(24px, 4.4vw, 34px)/1.2 var(--font); letter-spacing: -0.015em; margin: 0 0 18px; max-width: 28ch; color: var(--text); }
+.statement span { color: var(--faint); }
+.pill { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border-radius: 4px; font: 500 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tan); background: rgba(210, 185, 154, 0.1); box-shadow: inset 0 0 0 1px rgba(210, 185, 154, 0.3); white-space: nowrap; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+
+.cases { display: grid; gap: 12px; }
+@media (min-width: 760px) { .cases { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.case-art { height: 124px; margin: 0 0 12px; display: grid; place-items: center; border-radius: 10px; background: rgba(0, 0, 0, 0.28); box-shadow: inset 0 0 0 1px var(--hair); }
+.case-art svg { height: 100%; width: auto; max-width: 100%; }
+.case-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.case-head h3 { margin: 0; font-size: 19px; }
+.plan-wall { fill: none; stroke: rgba(210, 185, 154, 0.55); stroke-width: 1.2; }
+.plan-room { fill: rgba(255, 255, 255, 0.03); stroke: rgba(210, 185, 154, 0.3); stroke-width: 1; }
+.plan-hi { fill: rgba(210, 185, 154, 0.22); stroke: var(--tan); stroke-width: 1.4; }
+.plan-door { stroke: rgba(210, 185, 154, 0.8); stroke-width: 3; }
+.plan-dot { fill: #ecd6b8; }
+
+.numbers { display: grid; gap: 12px; }
+@media (min-width: 880px) { .numbers { grid-template-columns: 1.35fr 1fr 1fr; grid-template-rows: auto auto; } .numbers .feat { grid-row: span 2; } }
+.numbers .feat .stat-n { font-size: clamp(72px, 14vw, 120px); color: var(--tan); }
+.numbers .bz-in { display: grid; align-content: space-between; gap: 22px; min-height: 100%; }
+.numbers .src { display: flex; justify-content: space-between; gap: 10px; font: 500 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); border-top: 1px solid var(--hair); padding-top: 10px; }
+.numbers .desc { margin: 8px 0 0; color: var(--muted); font-size: 17px; max-width: 30ch; }
+
+.faq { margin-top: 18px; border-top: 1px solid var(--hair-strong); }
+.faq details { border-bottom: 1px solid var(--hair); }
+.faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 10px 4px; cursor: pointer; font-weight: 500; font-size: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: ""; width: 12px; height: 12px; flex: none; border-right: 1.5px solid var(--tan); border-bottom: 1.5px solid var(--tan); rotate: 45deg; translate: 0 -3px; transition: rotate 0.5s var(--ease), translate 0.5s var(--ease); }
+.faq details[open] summary::after { rotate: -135deg; translate: 0 3px; }
+.faq summary:hover { color: var(--tan); }
+.faq summary:focus-visible { outline: 2px solid var(--tan); outline-offset: 2px; }
+.faq .ans { padding: 0 4px 16px; color: var(--muted); max-width: 62ch; }
+.faq .ans a { color: var(--tan); }
+@supports (interpolate-size: allow-keywords) { .faq details::details-content { block-size: 0; overflow: clip; transition: block-size 0.5s var(--ease), content-visibility 0.5s allow-discrete; } .faq details[open]::details-content { block-size: auto; } :root { interpolate-size: allow-keywords; } }
+
+.hw { display: grid; gap: 18px; }
+@media (min-width: 880px) { .hw { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; gap: 32px; } }
+.blueprint { width: 100%; height: auto; display: block; }
+.bp-grid line { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+.bp-thread { fill: repeating-linear-gradient(90deg, #5a6d85 0 3px, transparent 3px 6px); fill: rgba(20, 30, 46, 0.5); stroke: rgba(210, 185, 154, 0.35); stroke-width: 1; }
+.bp-clip { fill: rgba(210, 185, 154, 0.14); stroke: var(--tan); stroke-width: 1.4; }
+.bp-dim { stroke: var(--tan); stroke-width: 1; fill: none; }
+.bp-ext { stroke: rgba(210, 185, 154, 0.45); stroke-width: 1; stroke-dasharray: 3 3; }
+.bp-text { fill: var(--tan); font: 500 20px var(--mono); }
+.bp-lead { stroke: rgba(210, 185, 154, 0.7); stroke-width: 1; }
+.bp-mark { fill: #05080e; stroke: var(--tan); stroke-width: 1.2; }
+.bp-key { fill: var(--tan); font: 500 14px var(--mono); }
+.legend { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 17px; }
+.legend b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 10px; font: 500 13px var(--mono); color: var(--tan); box-shadow: inset 0 0 0 1px var(--tan-dim); }
+
+.hw .spec > div { grid-template-columns: 1fr; }
+@media (min-width: 880px) { .numbers .wide { grid-column: span 2; } }

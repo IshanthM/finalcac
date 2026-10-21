@@ -27,3 +27,6 @@ recordings/*
 .scratch
 *.log
 .DS_Store
+
+# scraped reference material (not ours to redistribute)
+.firecrawl/
