@@ -6,6 +6,8 @@ import { Bezel } from './Bezel.tsx';
 import { Icon, type IconName } from './Icon.tsx';
 import { Orb } from './Orb.tsx';
 import { Reveal } from './Reveal.tsx';
+import { Stages } from './Stages.tsx';
+import { TagModel } from './TagModel.tsx';
 import { RingTrace } from './Trace.tsx';
 
 const REPO = 'https://github.com/IshanthM/finalcac';
@@ -25,7 +27,9 @@ export function Home() {
   const s = useAppState();
   const base = import.meta.env.BASE_URL;
   const [replay, setReplay] = useState(0);
-  const ring = (): void => { unlockOutputs(); chime(); setReplay((n) => n + 1); };
+  const [pulled, setPulled] = useState(false);
+  const pull = (): void => { if (pulled) return; unlockOutputs(); chime(); setPulled(true); setReplay((n) => n + 1); };
+  const rearm = (): void => setPulled(false);
   const code = s.storeCode;
   // Demo mode starts instantly: give the phone a default zone the first time (it can be changed there).
   const startDemo = (): void => {
@@ -44,12 +48,16 @@ export function Home() {
             <button class="btn" onClick={() => go('calibrate')}>Calibrate a tag</button>
           </Reveal>
         </div>
-        <Reveal i={2} class="scope-wrap">
+        <Reveal i={2} class="tag-stage">
           <Bezel tone="blue" ticks>
-            <button class="trace-tap" onClick={ring} aria-label="Play the alert chime and redraw the ring">
-              <div class="scope draw"><RingTrace replayKey={replay} /></div>
-              <div class="scope-cap"><span><b>13.3 kHz</b> tag ring, illustrative</span><span>Tap to hear the alert</span></div>
-            </button>
+            <TagModel pulled={pulled} onPull={pull} />
+            <div class="scope compact draw" key={replay}>{pulled ? <RingTrace bare replayKey={replay} /> : <RingTrace bare replayKey={-1} />}</div>
+            <div class="stage-controls">
+              <p class="stage-hint">{pulled ? 'Ringing at about 13.3 kHz' : 'Drag to turn the tag'}</p>
+              {pulled
+                ? <button class="btn btn-quiet" onClick={rearm}>Re-arm the tag</button>
+                : <button class="btn" onClick={pull}>Pull the pin</button>}
+            </div>
           </Bezel>
         </Reveal>
       </section>
@@ -87,13 +95,8 @@ export function Home() {
       </Reveal>
 
       <Reveal as="section" class="sec">
-        <h2 class="sec-label">Signal path</h2>
-        <ol class="path">
-          <li><h3>The tag rings</h3><p>Pulling the pin makes a small aluminum bar ring at about 13.3 kHz.</p></li>
-          <li><h3>A phone hears it</h3><p>Only a clean, fading tone passes. Clinks and keys do not.</p></li>
-          <li><h3>The zone is named</h3><p>Each phone knows its zone, so the alert says where.</p></li>
-          <li><h3>Staff are alerted</h3><p>A siren, the zone spoken aloud, and a full-screen alert.</p></li>
-        </ol>
+        <h2 class="sec-label">From tag to alert</h2>
+        <Stages />
       </Reveal>
 
       <Reveal as="section" class="sec">

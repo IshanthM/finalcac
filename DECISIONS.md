@@ -59,3 +59,9 @@
   (NRF $112B shrink figure and the magnet weakness, both from the team's innovation plan), "Under the hood" (on-device detection, 0.5% calibration,
   1 s merge, privacy, tests, GitHub link), and a demo that starts instantly with a default zone and a "No tag handy? Simulate a ring" panel,
   because judges will not have a physical tag. Page title, description and Open Graph tags added.
+- **D24 Models and motion layer.** Replaces imagery with original models of the product: a CSS-3D tag (28-facet aluminum standoff, two ghosted printed
+  clips, a tack pin) that turns by drag or arrow keys and rings when the pin is pulled (sound arcs spread, the ring trace draws, the chime plays),
+  and four small stage models (tag, phone with tone spike, floor plan with a pinging zone, staff phone with the alert banner) that play as a sequence
+  when scrolled into view or on "Replay". Motion patterns used (draw, pulse, sequence, scrub, spring physics) are generic techniques, written from
+  scratch; the connector line is scrubbed by scroll via CSS `animation-timeline: view()` where supported, static elsewhere. The spring is a CSS
+  `linear()` easing. No third-party clips, templates, markup or copy were reproduced. Everything collapses under `prefers-reduced-motion`.

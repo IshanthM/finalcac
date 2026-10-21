@@ -33,7 +33,9 @@ export function RingTrace({ bare = false, replayKey = 0 }: { bare?: boolean; rep
           <path class="env" d={PATHS.up} /><path class="env" d={PATHS.down} />
         </g>
       )}
-      <path class="wave" d={PATHS.wave} pathLength={1} />
+      {replayKey === -1
+        ? <line class="axis" x1="16" y1={MID} x2={W - 16} y2={MID} />
+        : <path class="wave" d={PATHS.wave} pathLength={1} />}
     </svg>
   );
 }
