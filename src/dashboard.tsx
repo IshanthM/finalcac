@@ -17,6 +17,27 @@ import { EventLog } from './ui/EventLog.tsx';
 import { Icon } from './ui/Icon.tsx';
 import { Island } from './ui/Island.tsx';
 import { Reveal } from './ui/Reveal.tsx';
+import './ui/spotlight.ts';
+
+/** Counts up to `n` once (ease-out, 0.9 s); static under reduced motion. */
+function Count({ n, d = 0 }: { n: number; d?: number }) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const [v, setV] = useState(reduce ? n : 0);
+  useEffect(() => {
+    if (reduce) { setV(n); return; }
+    const from = v;
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (t: number): void => {
+      const k = Math.min(1, (t - t0) / 900);
+      setV(from + (n - from) * (1 - (1 - k) ** 3));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [n]);
+  return <>{v.toFixed(d)}</>;
+}
 
 interface Summary { profile: TagProfile | null; zones: ZoneInfo[]; incidents: Incident[] }
 
@@ -103,11 +124,11 @@ function Dashboard() {
           <>
             <p class="muted" aria-live="polite">Store <span class="mono">{code}</span>, updated <span class="mono">{new Date(updated).toLocaleTimeString()}</span></p>
             <div class="bento stats">
-              <Reveal class="span-2 row-2"><Bezel tone="blue" class="stat-big"><span class="stat-n">{tampers.length}</span><span class="stat-l">Tamper alerts</span></Bezel></Reveal>
-              <Reveal i={1} class="span-2"><Bezel><span class={`stat-n ${open.length ? 'redn' : ''}`}>{open.length}</span><span class="stat-l">Open alerts</span></Bezel></Reveal>
-              <Reveal i={2} class="span-2"><Bezel><span class="stat-n">{ack === null ? 'n/a' : ack.toFixed(1)}{ack !== null && <small>s</small>}</span><span class="stat-l">Median time to acknowledge</span></Bezel></Reveal>
-              <Reveal i={1} class="span-2"><Bezel tone="amber"><span class="stat-n">{checkouts.length}</span><span class="stat-l">Checkouts</span></Bezel></Reveal>
-              <Reveal i={2} class="span-2"><Bezel><span class="stat-n">{online}<small>of {data.zones.length}</small></span><span class="stat-l">Zones online</span></Bezel></Reveal>
+              <Reveal class="span-2 row-2"><Bezel tone="blue" class="stat-big"><span class="stat-n"><Count n={tampers.length} /></span><span class="stat-l">Tamper alerts</span></Bezel></Reveal>
+              <Reveal i={1} class="span-2"><Bezel><span class={`stat-n ${open.length ? 'redn' : ''}`}><Count n={open.length} /></span><span class="stat-l">Open alerts</span></Bezel></Reveal>
+              <Reveal i={2} class="span-2"><Bezel><span class="stat-n">{ack === null ? 'n/a' : <Count n={ack} d={1} />}{ack !== null && <small>s</small>}</span><span class="stat-l">Median time to acknowledge</span></Bezel></Reveal>
+              <Reveal i={1} class="span-2"><Bezel tone="amber"><span class="stat-n"><Count n={checkouts.length} /></span><span class="stat-l">Checkouts</span></Bezel></Reveal>
+              <Reveal i={2} class="span-2"><Bezel><span class="stat-n"><Count n={online} /><small>of {data.zones.length}</small></span><span class="stat-l">Zones online</span></Bezel></Reveal>
             </div>
 
             <div class="cols two even" style={{ marginTop: '8px' }}>

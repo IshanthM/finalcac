@@ -46,7 +46,7 @@ export function Home() {
     <main class="page">
       <section class="hero-split">
         <div class="hero-copy">
-          <Reveal as="h1" class="display">Hear the tag.<br />Find the <em>zone</em>.</Reveal>
+          <h1 class="display"><span class="ln"><span style={{ '--d': 0 }}>Hear the tag.</span></span><span class="ln"><span style={{ '--d': 1 }}>Find the <em>zone</em>.</span></span></h1>
           <Reveal i={1} as="p" class="lede">Phones in each zone listen for a tag's ring and tell staff where it happened.</Reveal>
           <Reveal i={2} class="actions">
             <button class="btn btn-primary" onClick={() => go('demo')}>Try demo mode</button>

@@ -42,3 +42,7 @@
 - **D20 Bug found by the test rig: ring-start fragility.** If the refined onset landed a fraction of a millisecond before the click, the first 1 ms
   envelope frame was pure noise and ring length collapsed to 0, so valid rings failed the ringdown gate (seen at 44.1 kHz, reproduced at 48 kHz).
   Fixed with a short ring-start search (`ringEndFrame`); regression test sweeps 12 sub-millisecond offsets at 44.1 and 48 kHz.
+- **D21 Atmosphere pass.** Static "sound-spread" contour rings (inline SVG, fixed layer, drawn once) radiate from two corners; the tan set meets the home orb.
+  Load sequence plays once: island drops in, headline rises line by line, orb rings bloom outward. Desktop-only cursor spotlight on bezel borders
+  (one delegated pointer listener, no scroll listeners). Dashboard numbers count up. Store code copies with an icon morph. All of it collapses
+  under `prefers-reduced-motion`; nothing animates continuously (see D19).

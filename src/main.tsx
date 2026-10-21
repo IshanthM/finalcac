@@ -8,6 +8,7 @@ import '@fontsource/geist-mono/latin-400.css';
 import '@fontsource/geist-mono/latin-500.css';
 import './style.css';
 import { engine } from './audio/engine.ts';
+import './ui/spotlight.ts';
 import { getState, useRoute } from './state.ts';
 import { Calibrate } from './ui/Calibrate.tsx';
 import { Island } from './ui/Island.tsx';

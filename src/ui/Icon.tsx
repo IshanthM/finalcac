@@ -17,20 +17,21 @@ import sliders from '@phosphor-icons/core/assets/light/sliders-horizontal-light.
 import storefront from '@phosphor-icons/core/assets/light/storefront-light.svg?raw';
 import waveform from '@phosphor-icons/core/assets/light/waveform-light.svg?raw';
 import wifiSlash from '@phosphor-icons/core/assets/light/wifi-slash-light.svg?raw';
+import copy from '@phosphor-icons/core/assets/light/copy-light.svg?raw';
 import user from '@phosphor-icons/core/assets/light/user-light.svg?raw';
 
 const ICONS = {
   arrow: arrowUpRight, next: arrowRight, bell, broadcast, bug, chart, check, clock, back: caretLeft, lock, pin: mapPin, mic, play,
-  shield, tune: sliders, store: storefront, wave: waveform, offline: wifiSlash, user,
+  shield, tune: sliders, store: storefront, wave: waveform, offline: wifiSlash, user, copy,
 } as const;
 
 export type IconName = keyof typeof ICONS;
 
 /** Decorative by default (the text next to it names the control); pass `label` when it stands alone. */
-export function Icon({ name, label }: { name: IconName; label?: string }) {
+export function Icon({ name, label, cls = '' }: { name: IconName; label?: string; cls?: string }) {
   return (
     <span
-      class="icon"
+      class={`icon ${cls}`}
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : 'true'}

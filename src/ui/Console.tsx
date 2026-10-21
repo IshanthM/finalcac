@@ -42,6 +42,12 @@ export function Console() {
   const alarms = useAlarms();
   const [zones, setZones] = useState<ZoneInfo[]>([]);
   const [armed, setArmed] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copyCode = async (): Promise<void> => {
+    try { await navigator.clipboard.writeText(code ?? ''); } catch { /* clipboard blocked: the code is still on screen */ }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
   const code = s.storeCode;
 
   useEffect(() => {
@@ -85,6 +91,11 @@ export function Console() {
               <span class="eyebrow">Store code</span>
               <strong class="code-big" aria-label={`Store code ${code.split('').join(' ')}`}>{code}</strong>
               <span class="muted">Enter this on each listener phone.</span>
+              <button class={`code-copy ${copied ? 'done' : ''}`} onClick={() => void copyCode()} aria-label={`Copy store code ${code}`}>
+                <span class="swap"><Icon name="copy" cls={copied ? 'off' : ''} /><Icon name="check" cls={copied ? '' : 'off'} /></span>
+                <span aria-hidden="true">{copied ? 'Copied' : 'Copy code'}</span>
+              </button>
+              <span class="sr-only" role="status" aria-live="polite">{copied ? 'Store code copied' : ''}</span>
             </Bezel>
           </Reveal>
           <Reveal i={1}>
