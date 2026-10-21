@@ -2,6 +2,7 @@ import { engine } from '../audio/engine.ts';
 import { wakeLockActive } from '../audio/wakeLock.ts';
 import type { Zone } from '../state.ts';
 import { LiveTrace } from './LiveTrace.tsx';
+import { Orb } from './Orb.tsx';
 import { useEngine } from './useEngine.ts';
 
 /** Listening state, zone name, a live spectrum line and a level meter. */
@@ -13,8 +14,13 @@ export function ListenerHero({ zone }: { zone: Zone }) {
   const label = st === 'running' ? 'Listening' : st === 'starting' ? 'Starting' : st === 'suspended' ? 'Paused' : 'Not listening';
   return (
     <section class={`stage ${st === 'running' ? 'on' : ''}`} aria-label="Listener status">
-      <p class="hero-label" role="status" aria-live="polite">{label}</p>
-      <h1 class="hero-zone">{zone.name}</h1>
+      <div class="stage-head">
+        <Orb live on={st === 'running'} small />
+        <div>
+          <p class="hero-label" role="status" aria-live="polite">{label}</p>
+          <h1 class="hero-zone">{zone.name}</h1>
+        </div>
+      </div>
       <LiveTrace />
       <div class="meter" role="meter" aria-label="Input level" aria-valuemin={-90} aria-valuemax={0} aria-valuenow={Math.round(dbfs)}>
         <div class="meter-fill" style={{ width: `${pct}%` }} />

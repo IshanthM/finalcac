@@ -16,8 +16,8 @@ const shots = [
   ['console', `${base}#/console`, st({ role: 'staff' }), null],
   ['listener', `${base}#/listener`, st({ role: 'listener', zone }), null],
   ['calibrate', `${base}#/calibrate`, st({}), null, 'calib'],
-  ['demo', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Test alarm' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.getByRole('button', { name: /Acknowledge/ }).click(); await p.waitForTimeout(400); }],
-  ['alert', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Test: heard by two zones' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.waitForTimeout(900); }],
+  ['demo', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Simulate a tag ring' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.getByRole('button', { name: /Acknowledge/ }).click(); await p.waitForTimeout(400); }],
+  ['alert', `${base}#/demo`, st({ role: 'demo', zone }), async (p) => { await p.getByRole('button', { name: 'Simulate two phones hearing it' }).click(); await p.waitForSelector('[role=alertdialog]'); await p.waitForTimeout(900); }],
   ['dashboard', `${base}dashboard.html?store=${code}`, st({}), async (p) => { await p.waitForSelector('.stats'); }],
   ['debug', `${base}?debug=1`, st({}), null],
 ];

@@ -53,3 +53,9 @@
   a slim top bar with a five-bar fading-ring mark. Signature visuals come from the product: the tag's ring as a decaying waveform on a scope
   (home, alert) and a live 8 to 16 kHz spectrum line with the calibrated band marked (listener). Smaller type (display 60px max, h1 38px),
   48px controls. Body text stays 18px; mono labels are 14px (they are labels, not body). The live trace redraws at ~16 fps and pauses when hidden.
+- **D23 Design v4: hybrid for CAC judges.** Keeps v3's instrument structure (scope trace, bracket secondary buttons, mono label rail, spec sheet, tight scale)
+  and restores v2's warmth: soft glowing panels (crop-mark corners only on the scope readout), a rounded primary button with a nested arrow tile,
+  and the orb as a small live indicator beside the zone name (listener) and on the featured role card. Judge-facing content: "Why it matters"
+  (NRF $112B shrink figure and the magnet weakness, both from the team's innovation plan), "Under the hood" (on-device detection, 0.5% calibration,
+  1 s merge, privacy, tests, GitHub link), and a demo that starts instantly with a default zone and a "No tag handy? Simulate a ring" panel,
+  because judges will not have a physical tag. Page title, description and Open Graph tags added.

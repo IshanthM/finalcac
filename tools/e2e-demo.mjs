@@ -45,7 +45,7 @@ await run({ name: 'Register 1', type: 'register' }, async ({ page }) => {
 });
 
 await run({ name: 'Fitting Room 2', type: 'fitting' }, async ({ page }) => {
-  await page.getByRole('button', { name: 'Test: heard by two zones' }).click();
+  await page.getByRole('button', { name: 'Simulate two phones hearing it' }).click();
   await page.waitForSelector('[role=alertdialog]', { timeout: 3000 });
   const text = await page.innerText('[role=alertdialog]');
   check('dedupe: attributed to the louder zone, other listed', /Fitting Room 2/i.test(text) && /Also heard by Sales Floor/i.test(text) && /TEST/i.test(text), text.replace(/\n/g, ' | '));

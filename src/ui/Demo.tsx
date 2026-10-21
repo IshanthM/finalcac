@@ -29,6 +29,11 @@ export function Demo() {
   }, [hub]);
 
   const zone = s.zone;
+
+  // Demo mode should start instantly: give the phone a sensible zone the first time (it can be changed).
+  useEffect(() => {
+    if (!getState().zone) setState({ zone: { name: 'Fitting Room 2', type: 'fitting' }, role: 'demo' });
+  }, []);
   const running = e.info.state === 'running';
   const start = (): void => { unlockOutputs(); void keepAwake(); void e.start(); };
   const test = (): void => {
@@ -79,16 +84,22 @@ export function Demo() {
               </Bezel>
             </Reveal>
           )}
-          <Reveal i={1} class="sec-head" style={{ marginTop: s.profile ? '0' : undefined }}>
-            <h2>Staff console</h2>
+          <Reveal i={1}>
+            <Bezel tone="tan">
+              <h2 class="sub">No tag handy?</h2>
+              <p class="muted demo-hint">Simulate a ring to see exactly what staff see: the siren, the zone spoken aloud, and the alert.</p>
+              <div class="actions" style={{ margin: '12px 0 0' }}>
+                <button class="btn btn-primary" onClick={test}>Simulate a tag ring</button>
+                <button class="btn" onClick={testTwo}>Simulate two phones hearing it</button>
+              </div>
+            </Bezel>
           </Reveal>
-          <Reveal i={2}><EventLog items={incidents} /></Reveal>
+          <Reveal i={2} class="sec-head"><h2>Staff console</h2></Reveal>
+          <Reveal i={3}><EventLog items={incidents} /></Reveal>
           <Reveal i={3} class="actions">
-            <button class="btn" onClick={test}>Test alarm</button>
-            <button class="btn" onClick={testTwo}>Test: heard by two zones</button>
             <button class="btn btn-quiet" onClick={() => clearIncidents()}>Clear log</button>
           </Reveal>
-          <p class="muted">Tests use the same merge rule, register rule and alert as a real ring, and are marked “test” in the log.</p>
+          <p class="muted">Simulated rings use the same merge rule, register rule and alert as a real ring, and are marked “test” in the log.</p>
         </div>
       </div>
     </main>
