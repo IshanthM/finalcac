@@ -10,8 +10,10 @@ Last updated: Fri Oct 23, 2026.
 
 Established from `git log` (15 commits, Oct 20 to 21, 2026) and the repo contents:
 
-- **All 15 commits in this repo carry a `Co-Authored-By: Claude` trailer.** As best I can tell they were all made in
-  Claude Code sessions.
+- **All 15 commits from Oct 20 to 21 carried a `Co-Authored-By: Claude` trailer.** As best I can tell they were all
+  made in Claude Code sessions. On Oct 23 the student asked for those trailers to be removed from the commit messages, so
+  the local history no longer shows them (the file contents are unchanged). The copy of the history on GitHub still
+  has them until it is replaced. Removing the trailers does not change who wrote the code; this log is the record.
 - **Essentially all of the app code, styling, tests and documentation was written by Claude** in those sessions,
   working from a written brief by the student. That covers:
   - the capture engine and AudioWorklet (`src/audio/`);
