@@ -13,6 +13,7 @@
     "deploy": "bash scripts/deploy-pages.sh",
     "fixtures": "node --experimental-strip-types tools/make-fixtures.ts single && node --experimental-strip-types tools/make-fixtures.ts calib && node --experimental-strip-types tools/make-fixtures.ts calib-outlier",
     "analyze": "node --experimental-strip-types tools/analyze-wav.ts",
+    "analyze:folder": "node --experimental-strip-types tools/analyze-folder.ts",
     "relay:dev": "wrangler dev --local --port 8787 --persist-to .scratch/wrangler --var CREATE_LIMIT:100000",
     "relay:deploy": "wrangler deploy",
     "relay:teardown": "bash scripts/teardown.sh",

@@ -3,6 +3,7 @@ import type { CapturedEvent, Snapshot } from '../audio/engine.ts';
 import { keepAwake, wakeLockActive } from '../audio/wakeLock.ts';
 import { unlockOutputs } from '../alert/unlock.ts';
 import { saveWav } from '../audio/wavExport.ts';
+import { CAPTURE_LABELS, captureFilename, type CaptureLabel } from '../dsp/evaluation.ts';
 import { PARAMS } from '../dsp/params.ts';
 import { useEngine } from './useEngine.ts';
 import { Spectrogram } from './Spectrogram.tsx';
@@ -61,6 +62,103 @@ function SnapRow({ s }: { s: Snapshot }) {
   );
 }
 
+const LABEL_HELP: Record<CaptureLabel, string> = {
+  strike: 'Tag struck (the ring we want)',
+  noise: 'Room noise only, no tag',
+  keys: 'Keys jingling',
+  clap: 'Claps',
+  music: 'Music playing',
+  other: 'Other taps and sounds',
+};
+
+/**
+ * The three browser audio "enhancements" must be OFF: echo cancellation, noise suppression and auto gain all
+ * reshape the sound and can smear or delete a short 13 kHz ring. This shows what the browser actually gave us,
+ * not what we asked for. iOS may not report a field, which is shown as "not reported", never as "off".
+ */
+function ProcessingStatus({ settings }: { settings: MediaTrackSettings | null }) {
+  if (!settings) return <p class="muted">Audio processing: start listening to see what the browser actually applied.</p>;
+  // echoCancellation can also be a string (Chrome reports 'all' or 'remote-only'), which still means processing is ON.
+  const rows: [string, string | boolean | undefined][] = [
+    ['Echo cancellation', settings.echoCancellation],
+    ['Noise suppression', settings.noiseSuppression],
+    ['Auto gain', settings.autoGainControl],
+  ];
+  const show = (v: string | boolean | undefined): string => (v === undefined ? 'not reported' : v === false ? 'off' : 'ON');
+  const bad = rows.filter(([, v]) => v !== false);
+  return (
+    <>
+      <dl class="kv">{rows.map(([k, v]) => <><dt key={k}>{k}</dt><dd>{show(v)}</dd></>)}</dl>
+      {bad.length > 0 && <p class="error" role="status">{bad.map(([k]) => k).join(', ')} not confirmed off. Recordings made like this may not show the ring; note it with the results.</p>}
+    </>
+  );
+}
+
+/** Records a labelled clip and saves it with the label in the file name, so tools/analyze-folder.ts can score it. */
+function SessionRecorder({ running, sampleRate, isRecording, record }: { running: boolean; sampleRate: number; isRecording: boolean; record: (s: number) => Promise<Float32Array> }) {
+  const [label, setLabel] = useState<CaptureLabel>('strike');
+  const [room, setRoom] = useState('quiet');
+  const [distance, setDistance] = useState('d50');
+  const [expected, setExpected] = useState(10);
+  const [seconds, setSeconds] = useState(30);
+  const [left, setLeft] = useState(0);
+  const [saved, setSaved] = useState<string[]>([]);
+  const isStrike = label === 'strike';
+
+  const go = async (): Promise<void> => {
+    setLeft(seconds);
+    const tick = setInterval(() => setLeft((n) => Math.max(0, n - 1)), 1000);
+    const samples = await record(seconds);
+    clearInterval(tick);
+    setLeft(0);
+    const name = captureFilename({ label, room, distance: isStrike ? distance : 'dna', expected: isStrike ? expected : 0 }, stamp(Date.now()).replace(/[^0-9T]/g, '').replace('T', '-'));
+    await saveWav(samples, sampleRate, name);
+    setSaved((l) => [name, ...l].slice(0, 12));
+  };
+
+  return (
+    <>
+      <h3>Labelled recording</h3>
+      <p class="muted">Pick what you are about to do, press Record, then do it. For a strike clip, strike the tag the number of times you enter, about a second apart. The file name carries the label.</p>
+      <label class="field"><span>What are you recording</span>
+        <select class="input" value={label} onChange={(e) => setLabel((e.currentTarget.value as CaptureLabel))}>
+          {CAPTURE_LABELS.map((l) => <option value={l} key={l}>{LABEL_HELP[l]}</option>)}
+        </select>
+      </label>
+      <label class="field"><span>Room</span>
+        <select class="input" value={room} onChange={(e) => setRoom(e.currentTarget.value)}>
+          <option value="quiet">Quiet</option>
+          <option value="noisy">Noisy (TV, talking, fan)</option>
+        </select>
+      </label>
+      {isStrike && (
+        <>
+          <label class="field"><span>Distance phone to tag</span>
+            <select class="input" value={distance} onChange={(e) => setDistance(e.currentTarget.value)}>
+              <option value="d10">About 10 cm</option>
+              <option value="d50">About 50 cm</option>
+              <option value="d100">About 1 m</option>
+            </select>
+          </label>
+          <label class="field"><span>Number of strikes you will make</span>
+            <input class="input" type="number" inputMode="numeric" min={1} max={60} value={expected} onInput={(e) => setExpected(Number(e.currentTarget.value))} />
+          </label>
+        </>
+      )}
+      <label class="field"><span>Length in seconds</span>
+        <input class="input" type="number" inputMode="numeric" min={5} max={120} value={seconds} onInput={(e) => setSeconds(Number(e.currentTarget.value))} />
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" onClick={() => void go()} disabled={!running || isRecording || !(seconds >= 5) || (isStrike && !(expected >= 1))}>
+          {left > 0 ? `Recording… ${left} s left` : 'Record and save'}
+        </button>
+      </div>
+      {!running && <p class="muted">Start listening first.</p>}
+      {saved.length > 0 && (<><h3>Saved this session</h3><ul class="list">{saved.map((n) => <li class="row" key={n}><span>{n}</span></li>)}</ul></>)}
+    </>
+  );
+}
+
 export function Debug() {
   const e = useEngine();
   const [busy, setBusy] = useState('');
@@ -116,6 +214,8 @@ export function Debug() {
 
       <section aria-label="Capture">
         <h2>Capture</h2>
+        <SessionRecorder running={running} sampleRate={sampleRate} isRecording={e.isRecording} record={(n) => e.recordNext(n)} />
+        <h3>Quick capture</h3>
         <div class="actions">
           <button class="btn" onClick={downloadLast} disabled={!running}>Download last 2 s (WAV)</button>
           <button class="btn" onClick={() => void record10()} disabled={!running || e.isRecording}>Record 10 s to WAV</button>
@@ -140,6 +240,8 @@ export function Debug() {
           <dt>Base latency</dt><dd>{f1(baseLatencyMs, 1)} ms</dd>
           <dt>Wake lock</dt><dd>{wakeLockActive() ? 'held' : 'not held'}</dd>
         </dl>
+        <h3>Audio processing the browser applied</h3>
+        <ProcessingStatus settings={trackSettings} />
         <h3>Track settings</h3>
         <pre class="pre">{trackSettings ? JSON.stringify(trackSettings, null, 2) : 'n/a'}</pre>
       </section>
